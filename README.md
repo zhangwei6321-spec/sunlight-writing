@@ -13,7 +13,7 @@
 python3 serve-daemon.py
 ```
 
-默认地址 `http://127.0.0.1:8666`。也可以 `python3 -m http.server 8666` 快速预览，但 `/api/data` 持久化接口不可用。
+默认地址 `http://127.0.0.1:8666`。也可以 `python3 -m http.server 8666` 快速预览，但 `/api/data` 持久化接口不可用，此时前端会自动回退到 localStorage（见下）。
 
 ## AI 接口配置
 
@@ -23,10 +23,20 @@ python3 serve-daemon.py
 
 - `*.html`：各功能页
 - `assets/ai-short-prompts.js`：创作指令（提示词）库
+- `assets/data-api.js`：数据持久化适配层（服务端 `/api/data` ↔ localStorage 自动降级）
 - `assets/data.js`：书架数据持久化
 - `assets/library-gen.js`：灵感库生成
 - `theme.css`：全局样式
 - `serve-daemon.py`：本地文件服务器（`/api/data` 读写、`/api/save-share` 分享页生成）
+
+## 数据持久化
+
+所有数据读写统一走 `assets/data-api.js`（`window.RGData`）：
+
+- **有后端时**（`python3 serve-daemon.py`）：优先读写服务端 `data/*.json`，同时把服务端数据镜像到 localStorage；写入为「双写」（服务端 + 本地）。
+- **无后端时**（`python3 -m http.server`、GitHub Pages 等纯静态托管）：自动降级为纯 localStorage，功能不报错、数据照样存得住，只是不再跨设备共享。判定「无后端」后有 30 秒静默期，避免反复发送无效请求。
+
+因此本站可以直接托管在 GitHub Pages 上使用：书架、AI 短篇历史、工具箱历史都会保存在浏览器本地。唯一不可用的是依赖服务端的「产出链接」（`/api/save-share`）。
 
 ## 说明
 

@@ -6,6 +6,7 @@
   'use strict';
 
   var KEY = 'rgyw_data_v1';
+  var SRV_KEY = 'bookshelf';   // 服务端备份用的 key（data/bookshelf.json）
 
   function uid(prefix) {
     return (prefix || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -166,13 +167,40 @@
 
   function data() {
     var d = load();
-    if (!d || !d.books) { d = seed(); save(d); }
+    /* 种子初始化只写本地：此时若回写服务端，会用示例数据覆盖掉真正的服务端备份 */
+    if (!d || !d.books) { d = seed(); saveLocal(d); }
     else { (d.books || []).forEach(ensureLibrary); }
     return d;
   }
 
-  function save(d) {
+  /* 只写 localStorage */
+  function saveLocal(d) {
     try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { /* ignore */ }
+  }
+
+  /* 写本地 + 尽力同步服务端；无后端时静默降级（见 assets/data-api.js） */
+  function save(d) {
+    saveLocal(d);
+    var api = global.RGData;
+    if (api && typeof api.set === 'function') {
+      try { api.set(SRV_KEY, d); } catch (e) { /* ignore */ }
+    }
+  }
+
+  /* 从服务端备份恢复书架数据；无后端时回调 false，页面照常使用本地数据 */
+  function restoreFromServer(cb) {
+    var done = function (restored) { if (typeof cb === 'function') cb(!!restored); };
+    var api = global.RGData;
+    if (!api || typeof api.get !== 'function') { done(false); return; }
+    api.get(SRV_KEY).then(function (res) {
+      var d = res && res.data;
+      if (res && res.source === 'server' && d && d.books && d.books.length) {
+        saveLocal(d);
+        done(true);
+      } else {
+        done(false);
+      }
+    }).catch(function () { done(false); });
   }
 
   function bookById(id, src) {

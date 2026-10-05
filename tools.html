@@ -114,6 +114,7 @@
       </div>
       <div class="footer-bottom">© 2026 日光写作 · 让灵感永不枯竭</div>
     </footer>
+    <script src="./assets/data-api.js"></script>
     <script>
       (function () {
         var toggle = document.querySelector('.menu-toggle');
@@ -469,7 +470,7 @@
           clearTimeout(_thTimer);
           _thTimer = setTimeout(function () {
             try {
-              fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'tools', data: { history: getToolHistories(), savedAt: new Date().toISOString() } }) }).catch(function () {});
+              if (window.RGData) { RGData.set('tools', { history: getToolHistories(), savedAt: new Date().toISOString() }); }
             } catch (e) {}
           }, 500);
         }
@@ -509,7 +510,9 @@
         }
         function restoreToolsFromServer() {
           try {
-            fetch('/api/data?key=tools').then(function (r) { return r.json(); }).then(function (res) {
+            if (!window.RGData) return;
+            RGData.get('tools').then(function (r) {
+              var res = (r && r.source === 'server') ? { ok: true, data: r.data } : null;
               if (!res || !res.ok || !res.data || !res.data.history || !Array.isArray(res.data.history)) return;
               var local = getToolHistories();
               var localSaved = '';

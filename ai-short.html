@@ -7,6 +7,7 @@
     <title>AI 短篇 | 日光写作</title>
     <link rel="stylesheet" href="./theme.css" />
     <script src="./assets/ai-short-prompts.js"></script>
+    <script src="./assets/data-api.js"></script>
     <style>
       /* AI 短篇页面样式 */
       .short-hero { max-width: 46rem; margin-bottom: 1.75rem; }
@@ -655,7 +656,7 @@
             clearTimeout(_hTimer);
             _hTimer = setTimeout(function () {
               try {
-                fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short', data: payload }) }).catch(function () {});
+                if (window.RGData) { RGData.set('ai-short', payload); }
               } catch (e) {}
             }, 500);
           }
@@ -670,7 +671,7 @@
             clearTimeout(_dTimer);
             _dTimer = setTimeout(function () {
               try {
-                fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short-draft', data: data }) }).catch(function () {});
+                if (window.RGData) { RGData.set('ai-short-draft', data); }
               } catch (e) {}
             }, 800);
           }
@@ -678,7 +679,7 @@
             try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
             clearTimeout(_dTimer);
             try {
-              fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short-draft', data: {} }) }).catch(function () {});
+              if (window.RGData) { RGData.set('ai-short-draft', {}); }
             } catch (e) {}
           }
           function appendDraftIfAny() {
@@ -705,7 +706,9 @@
             } catch (e) {}
             try { appendDraftIfAny(); } catch (e) {}
             try {
-              fetch('/api/data?key=ai-short').then(function (r) { return r.json(); }).then(function (res) {
+              if (!window.RGData) return;
+              RGData.get('ai-short').then(function (r) {
+                var res = (r && r.source === 'server') ? { ok: true, data: r.data } : null;
                 if (res && res.ok && res.data && res.data.history && res.data.history.length) {
                   var ls = '';
                   try { var lp = JSON.parse(localStorage.getItem(HIST_KEY) || 'null'); ls = lp ? (lp.savedAt || '') : ''; } catch (e2) {}
@@ -721,7 +724,7 @@
             chatHistory = [];
             try { localStorage.removeItem(HIST_KEY); } catch (e) {}
             try {
-              fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short', data: { history: [], savedAt: new Date().toISOString() } }) }).catch(function () {});
+              if (window.RGData) { RGData.set('ai-short', { history: [], savedAt: new Date().toISOString() }); }
             } catch (e) {}
           }
           var generating = false;
