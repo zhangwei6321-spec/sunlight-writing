@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>设置 | 日光写作</title>
+    <meta name="description" content="配置 AI 大模型接入参数，包括 API 地址、密钥和模型选择。" />
+    <meta name="theme-color" content="#0b0f1a" />
+    <link rel="stylesheet" href="./theme.css" />
+    <style>
+      .settings-wrap { max-width: 42rem; margin: 0 auto; padding: 2rem 1rem; }
+      .settings-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.5rem; }
+      .settings-card h2 { font-size: 1.125rem; font-weight: 600; margin: 0 0 .25rem; }
+      .settings-card p.desc { font-size: .8125rem; color: var(--color-muted); margin: 0 0 1.25rem; }
+      .field { margin-bottom: 1.25rem; }
+      .field:last-child { margin-bottom: 0; }
+      .field label { display: block; font-size: .8125rem; font-weight: 500; margin-bottom: .375rem; color: var(--color-text); }
+      .field .hint { font-size: .75rem; color: var(--color-muted); margin-top: .25rem; }
+      .field input, .field select { width: 100%; padding: .625rem .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg); color: var(--color-text); font-size: .875rem; line-height: 1.5; transition: border-color .15s; box-sizing: border-box; }
+      .field input:focus, .field select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, .15); }
+      .field input[type="password"] { font-family: ui-monospace, monospace; letter-spacing: .05em; }
+      .preset-row { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+      .preset-btn { padding: .375rem .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font-size: .8125rem; cursor: pointer; transition: all .15s; }
+      .preset-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+      .preset-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+      .btn-row { display: flex; gap: .75rem; margin-top: 1.5rem; }
+      .status-msg { font-size: .8125rem; padding: .5rem .75rem; border-radius: var(--radius-md); margin-top: 1rem; display: none; }
+      .status-msg.success { display: block; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+      .status-msg.error { display: block; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+      .status-msg.info { display: block; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+      .toggle-vis { position: absolute; right: .75rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-muted); cursor: pointer; font-size: .75rem; padding: .25rem; }
+      .input-wrap { position: relative; }
+    </style>
+  </head>
+  <body data-page-id="settings">
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="header-inner">
+          <a class="brand" href="index.html" aria-label="日光写作首页">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </span>
+            日光写作
+          </a>
+          <nav class="main-nav" aria-label="主导航">
+            <a href="bookshelf.html">书架</a>
+            <a href="write.html">AI写作</a>
+            <a href="prompts.html">提示词库</a>
+            <a href="ai-short.html">AI短篇</a>
+            <a href="tools.html">创意工具箱</a>
+            <a href="settings.html" aria-current="page">设置</a>
+          </nav>
+          <div class="header-actions">
+            <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">菜单</button>
+            <a class="btn btn-primary" href="write.html">立即开始创作</a>
+          </div>
+        </div>
+        <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
+          <a href="bookshelf.html">书架</a>
+          <a href="write.html">AI写作</a>
+          <a href="prompts.html">提示词库</a>
+          <a href="ai-short.html">AI短篇</a>
+          <a href="tools.html">创意工具箱</a>
+          <a href="settings.html" aria-current="page">设置</a>
+          <a class="btn btn-primary btn-block" href="write.html">立即开始创作</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="section">
+          <div class="container">
+            <p class="section-eyebrow">系统设置</p>
+            <h1 class="section-title">AI 大模型配置</h1>
+            <p class="section-sub">配置您的 AI 模型接入参数，用于 AI 短篇创作和 AI 写作功能。支持任何兼容 OpenAI 接口的模型服务。</p>
+
+            <div class="settings-wrap">
+              <div class="settings-card">
+                <h2>模型提供商</h2>
+                <p class="desc">选择预设快速填入 API 地址，或手动填写自定义地址。</p>
+                <div class="preset-row" id="preset-row">
+                  <button class="preset-btn" data-provider="openai" type="button">OpenAI</button>
+                  <button class="preset-btn" data-provider="deepseek" type="button">DeepSeek</button>
+                  <button class="preset-btn" data-provider="anthropic" type="button">Anthropic</button>
+                  <button class="preset-btn" data-provider="qwen" type="button">通义千问</button>
+                  <button class="preset-btn" data-provider="zhipu" type="button">智谱 GLM</button>
+                  <button class="preset-btn active" data-provider="custom" type="button">自定义</button>
+                </div>
+                <div class="field">
+                  <label for="api-base">API 地址</label>
+                  <input type="url" id="api-base" placeholder="https://api.openai.com/v1" autocomplete="off" />
+                  <p class="hint">填写模型服务商的 API Base URL，需兼容 OpenAI Chat Completions 接口。</p>
+                </div>
+              </div>
+
+              <div class="settings-card">
+                <h2>认证信息</h2>
+                <p class="desc">API Key 仅保存在您浏览器本地，不会上传到任何服务器。</p>
+                <div class="field">
+                  <label for="api-key">API Key</label>
+                  <div class="input-wrap">
+                    <input type="password" id="api-key" placeholder="sk-..." autocomplete="off" />
+                    <button class="toggle-vis" type="button" id="toggle-key">显示</button>
+                  </div>
+                  <p class="hint">从您的模型服务商控制台获取 API Key。</p>
+                </div>
+              </div>
+
+              <div class="settings-card">
+                <h2>模型选择</h2>
+                <p class="desc">填写要使用的模型名称，不同服务商支持的模型名称不同。</p>
+                <div class="field">
+                  <label for="model-name">模型名称</label>
+                  <input type="text" id="model-name" placeholder="gpt-4o / deepseek-chat / qwen-turbo ..." autocomplete="off" />
+                  <p class="hint">例如：gpt-4o、deepseek-chat、deepseek-reasoner、qwen-turbo、glm-4 等</p>
+                </div>
+                <div class="field">
+                  <label for="max-tokens">最大生成字数</label>
+                  <input type="number" id="max-tokens" placeholder="4096" min="256" max="128000" />
+                  <p class="hint">控制单次生成内容的最大长度（token 数）。留空默认 4096。</p>
+                </div>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" type="button" id="btn-save">保存配置</button>
+                <button class="btn btn-ghost" type="button" id="btn-test">测试连接</button>
+                <button class="btn btn-ghost" type="button" id="btn-clear">清除配置</button>
+              </div>
+              <div class="status-msg" id="status-msg"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <p class="footer-note">日光写作 · 让故事自己生长</p>
+          <nav class="footer-nav" aria-label="页脚导航">
+            <div>
+              <h3>产品</h3>
+              <a href="bookshelf.html">书架</a>
+              <a href="write.html">AI写作</a>
+              <a href="write.html">AI续写</a>
+              <a href="write.html">AI扩写润色</a>
+              <a href="write.html">AI拆书</a>
+            </div>
+            <div>
+              <h3>资源</h3>
+              <a href="prompts.html">提示词库</a>
+              <a href="tools.html">创意工具箱</a>
+              <a href="settings.html">设置</a>
+            </div>
+          </nav>
+        </div>
+        <div class="footer-bottom">© 2026 日光写作 · 复刻演示项目 · 页面与功能为演示用 Mock 实现</div>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        // Mobile nav toggle
+        var toggle = document.querySelector('.menu-toggle');
+        var nav = document.getElementById('mobile-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', function () {
+            var open = nav.style.display === 'flex';
+            nav.style.display = open ? 'none' : 'flex';
+            toggle.setAttribute('aria-expanded', String(!open));
+          });
+        }
+
+        // Provider presets
+        var PRESETS = {
+          openai: { base: 'https://api.openai.com/v1', model: 'gpt-4o' },
+          deepseek: { base: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+          anthropic: { base: 'https://api.anthropic.com/v1', model: 'claude-sonnet-4-20250514' },
+          qwen: { base: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-turbo' },
+          zhipu: { base: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
+          custom: { base: '', model: '' }
+        };
+
+        var STORAGE_KEY = 'rgyw_ai_config';
+        var apiBaseInput = document.getElementById('api-base');
+        var apiKeyInput = document.getElementById('api-key');
+        var modelNameInput = document.getElementById('model-name');
+        var maxTokensInput = document.getElementById('max-tokens');
+        var btnSave = document.getElementById('btn-save');
+        var btnTest = document.getElementById('btn-test');
+        var btnClear = document.getElementById('btn-clear');
+        var statusMsg = document.getElementById('status-msg');
+        var toggleKey = document.getElementById('toggle-key');
+        var presetBtns = document.querySelectorAll('.preset-btn');
+
+        function showStatus(type, text) {
+          statusMsg.className = 'status-msg ' + type;
+          statusMsg.textContent = text;
+        }
+
+        function loadConfig() {
+          try {
+            var raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) return JSON.parse(raw);
+          } catch (e) {}
+          return null;
+        }
+
+        function saveConfig() {
+          var config = {
+            apiBase: apiBaseInput.value.trim().replace(/\/+$/, ''),
+            apiKey: apiKeyInput.value.trim(),
+            model: modelNameInput.value.trim(),
+            maxTokens: maxTokensInput.value.trim()
+          };
+          if (!config.apiBase || !config.apiKey || !config.model) {
+            showStatus('error', '请填写完整的 API 地址、API Key 和模型名称。');
+            return false;
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+          showStatus('success', '配置已保存！AI 短篇和 AI 写作功能将使用此配置调用真实大模型。');
+          return true;
+        }
+
+        // Init: load saved config
+        var saved = loadConfig();
+        if (saved) {
+          apiBaseInput.value = saved.apiBase || '';
+          apiKeyInput.value = saved.apiKey || '';
+          modelNameInput.value = saved.model || '';
+          maxTokensInput.value = saved.maxTokens || '';
+          // Try to detect provider from base URL
+          var detected = 'custom';
+          for (var k in PRESETS) {
+            if (PRESETS[k].base && saved.apiBase && saved.apiBase.indexOf(PRESETS[k].base.replace(/\/+$/, '')) === 0) {
+              detected = k;
+              break;
+            }
+          }
+          presetBtns.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-provider') === detected); });
+        }
+
+        // Preset buttons
+        presetBtns.forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            var provider = btn.getAttribute('data-provider');
+            presetBtns.forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            var preset = PRESETS[provider];
+            if (preset.base) apiBaseInput.value = preset.base;
+            if (preset.model) modelNameInput.value = preset.model;
+          });
+        });
+
+        // Toggle password visibility
+        if (toggleKey) {
+          toggleKey.addEventListener('click', function () {
+            var isPassword = apiKeyInput.type === 'password';
+            apiKeyInput.type = isPassword ? 'text' : 'password';
+            toggleKey.textContent = isPassword ? '隐藏' : '显示';
+          });
+        }
+
+        // 自动保存：输入内容变化即保存，无需手动点按钮（避免“昨天填了今天没了”）
+        var saveTimer = null;
+        function autoSave() {
+          var config = {
+            apiBase: apiBaseInput.value.trim().replace(/\/+$/, ''),
+            apiKey: apiKeyInput.value.trim(),
+            model: modelNameInput.value.trim(),
+            maxTokens: maxTokensInput.value.trim()
+          };
+          if (!config.apiBase || !config.apiKey || !config.model) return; // 不完整先不存，等填完
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+          showStatus('success', '配置已自动保存到本地。');
+        }
+        [apiBaseInput, apiKeyInput, modelNameInput, maxTokensInput].forEach(function (el) {
+          if (!el) return;
+          el.addEventListener('input', function () {
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(autoSave, 600);
+          });
+        });
+
+        // Save
+        if (btnSave) btnSave.addEventListener('click', saveConfig);
+
+        // Test connection
+        if (btnTest) btnTest.addEventListener('click', function () {
+          var config = {
+            apiBase: apiBaseInput.value.trim().replace(/\/+$/, ''),
+            apiKey: apiKeyInput.value.trim(),
+            model: modelNameInput.value.trim()
+          };
+          if (!config.apiBase || !config.apiKey || !config.model) {
+            showStatus('error', '请先填写 API 地址、API Key 和模型名称。');
+            return;
+          }
+          showStatus('info', '正在测试连接...');
+          btnTest.disabled = true;
+          fetch(config.apiBase + '/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.apiKey },
+            body: JSON.stringify({
+              model: config.model,
+              messages: [{ role: 'user', content: '你好，请回复一个字：好' }],
+              max_tokens: 10
+            })
+          }).then(function (r) {
+            btnTest.disabled = false;
+            if (r.ok) {
+              return r.json().then(function (data) {
+                if (data.choices && data.choices.length > 0) {
+                  showStatus('success', '连接成功！模型已正常响应。');
+                } else {
+                  showStatus('error', '连接成功但返回格式异常：' + JSON.stringify(data).slice(0, 200));
+                }
+              });
+            } else {
+              return r.text().then(function (text) {
+                showStatus('error', '请求失败（HTTP ' + r.status + '）：' + text.slice(0, 200));
+              });
+            }
+          }).catch(function (err) {
+            btnTest.disabled = false;
+            showStatus('error', '网络错误：' + err.message);
+          });
+        });
+
+        // Clear config
+        if (btnClear) btnClear.addEventListener('click', function () {
+          if (confirm('确定要清除所有 AI 模型配置吗？清除后将恢复为演示模式。')) {
+            localStorage.removeItem(STORAGE_KEY);
+            apiBaseInput.value = '';
+            apiKeyInput.value = '';
+            modelNameInput.value = '';
+            maxTokensInput.value = '';
+            presetBtns.forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-provider') === 'custom'); });
+            showStatus('success', '配置已清除，已恢复为演示模式。');
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

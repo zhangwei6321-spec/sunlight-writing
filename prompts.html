@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="日光写作海量提示词库 —— 角色描写、场景描述、情感表达等专业 AI 写网文提示词。" />
+    <title>提示词库 | 日光写作</title>
+    <link rel="stylesheet" href="./theme.css" />
+    <style>
+      .prompt-hero { text-align: center; padding: 3.5rem 1.5rem 2rem; }
+      .prompt-hero h1 { font-size: clamp(1.75rem, 3.4vw, 2.5rem); color: var(--color-primary-deep); margin: 0 0 .75rem; font-weight: 800; }
+      .prompt-hero p { color: var(--color-muted-text); margin: 0 auto; max-width: 36rem; }
+      .filter-bar { max-width: 72rem; margin: 0 auto 2rem; display: flex; flex-direction: column; gap: 1rem; }
+      .search-box { position: relative; max-width: 30rem; width: 100%; }
+      .search-box input { width: 100%; border: 1px solid var(--color-border); border-radius: 999px; padding: .75rem 1.25rem .75rem 2.75rem; background: var(--color-surface); font-size: .9375rem; }
+      .search-box input:focus { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 3px var(--color-primary-soft); }
+      .search-box svg { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--color-muted-text); }
+      .chip-row-cat { display: flex; flex-wrap: wrap; gap: .5rem; }
+      .chip-row-cat .chip { cursor: pointer; }
+      .prompt-detail { margin-top: .5rem; border-top: 1px solid var(--color-border); padding-top: .875rem; font-size: .875rem; color: var(--color-text); line-height: 1.8; }
+      .prompt-card.hidden { display: none; }
+      .copy-ok { color: var(--color-success); font-size: .8125rem; font-weight: 600; }
+      .empty-hint { grid-column: 1 / -1; text-align: center; color: var(--color-muted-text); padding: 3rem 0; }
+    </style>
+  </head>
+  <body data-page-id="prompts">
+    <a class="skip-link" href="#main-content">跳转到主要内容</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="日光写作首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+          </span>
+          日光写作
+        </a>
+        <nav class="main-nav" aria-label="主导航">
+          <a href="bookshelf.html">书架</a>
+          <a href="write.html">AI写作</a>
+          <a href="prompts.html" aria-current="page">提示词库</a>
+          <a href="ai-short.html">AI短篇</a>
+          <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+        </nav>
+        <div class="header-actions">
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">菜单</button>
+          <a class="btn btn-primary" href="write.html">立即开始创作</a>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
+        <a href="bookshelf.html">书架</a>
+        <a href="write.html">AI写作</a>
+        <a href="prompts.html">提示词库</a>
+        <a href="ai-short.html">AI短篇</a>
+        <a href="tools.html">创意工具箱</a>
+        <a href="settings.html">设置</a>
+        <a class="btn btn-primary btn-block" href="write.html">立即开始创作</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <script>
+        (function () {
+          var toggle = document.querySelector('.menu-toggle');
+          var nav = document.getElementById('mobile-nav');
+          if (toggle && nav) {
+            toggle.addEventListener('click', function () {
+              var open = nav.style.display === 'flex';
+              nav.style.display = open ? 'none' : 'flex';
+              toggle.setAttribute('aria-expanded', String(!open));
+            });
+          }
+        })();
+      </script>
+
+      <section class="prompt-hero" data-anchor-id="prompts.hero">
+        <h1>海量提示词库</h1>
+        <p>从专业作家和用户社区中获取精选提示词，覆盖角色、场景、情节、世界观等网文创作全场景。</p>
+      </section>
+
+      <div class="filter-bar">
+        <div class="search-box" style="margin:0 auto;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+          <label class="sr-only" for="prompt-search" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">搜索提示词</label>
+          <input id="prompt-search" type="search" placeholder="搜索提示词标题、描述或标签…" />
+        </div>
+        <div class="chip-row-cat" id="cat-row" role="group" aria-label="提示词分类筛选">
+          <button class="chip" type="button" data-cat="全部" aria-pressed="true">全部</button>
+          <button class="chip" type="button" data-cat="角色描写" aria-pressed="false">角色描写</button>
+          <button class="chip" type="button" data-cat="场景描述" aria-pressed="false">场景描述</button>
+          <button class="chip" type="button" data-cat="情感表达" aria-pressed="false">情感表达</button>
+          <button class="chip" type="button" data-cat="故事开头" aria-pressed="false">故事开头</button>
+          <button class="chip" type="button" data-cat="对话生成" aria-pressed="false">对话生成</button>
+          <button class="chip" type="button" data-cat="人物塑造" aria-pressed="false">人物塑造</button>
+          <button class="chip" type="button" data-cat="情节转折" aria-pressed="false">情节转折</button>
+          <button class="chip" type="button" data-cat="世界观构建" aria-pressed="false">世界观构建</button>
+          <button class="chip" type="button" data-cat="悬疑氛围" aria-pressed="false">悬疑氛围</button>
+          <button class="chip" type="button" data-cat="冲突设计" aria-pressed="false">冲突设计</button>
+          <button class="chip" type="button" data-cat="结局设计" aria-pressed="false">结局设计</button>
+        </div>
+      </div>
+
+      <section class="section" style="padding-top:0;">
+        <div class="section-inner">
+          <div class="prompt-grid" id="prompt-grid" data-anchor-id="prompts.list"></div>
+        </div>
+      </section>
+
+      <script>
+        (function () {
+          var PROMPTS = [
+            { title: '角色塑造提示', cat: '人物塑造', tags: ['角色', '立体度'], desc: '创建一个立体、有深度的角色，包括其背景故事、性格特点、行为模式和成长轨迹。', full: '请塑造一个网文主角，要求：1）背景：出生环境与童年关键事件；2）性格：核心性格特质与内在矛盾；3）行为模式：面对压力时的本能反应；4）成长轨迹：从开局到结局的性格弧光。给出具体细节而非泛泛而谈，让读者能一眼记住这个角色。', author: '由专业编剧贡献', meta: '4.9星 · 2000+使用' },
+            { title: '场景描写模板', cat: '场景描述', tags: ['感官', '氛围'], desc: '用丰富的感官描写创建一个身临其境的场景，包括视觉、听觉、嗅觉等多维度。', full: '请描写一个场景，遵循模板：1）视觉：光线、色彩、空间布局；2）听觉：环境音、人物动作声；3）嗅觉：气味如何呼应情绪；4）触觉：温度、质感、风；5）情绪锚点：用一个细节呼应主角当下心境。禁止平铺直叙，让读者仿佛置身其中。', author: '编辑部精选', meta: '4.9星 · 2000+使用' },
+            { title: '情节转折技巧', cat: '情节转折', tags: ['戏剧性', '意外'], desc: '设计出人意料但合乎逻辑的情节转折，在保持故事连贯性的同时增加戏剧张力。', full: '请为一个情节设计转折：1）铺垫：埋下至少两个看似无关的伏笔；2）反转：真相颠覆读者的预期，但回头再看一切有迹可循；3）代价：转折必须让主角付出代价或改变立场；4）连锁：转折引发后续至少两个新的冲突。', author: '社区热门', meta: '1500+收藏' },
+            { title: '情感爆发描写', cat: '情感表达', tags: ['情绪', '泪点'], desc: '细腻刻画人物在高强度情感瞬间的内心活动与外在表现，让读者共情。', full: '请描写一个情感爆发场景：1）前情：用一句带过情绪的积蓄过程；2）生理反应：手抖、呼吸、视线模糊等身体细节；3）内心独白：克制而有力量的内心声音；4）外部反应：身边人如何察觉；5）收束：用一个动作或一句话让情绪落地。', author: '心理向作者联盟', meta: '4.8星 · 1200+使用' },
+            { title: '黄金三章开头', cat: '故事开头', tags: ['钩子', '节奏'], desc: '按照黄金三章法则生成高留存率的开篇，三章内完成悬念与期待建立。', full: '请按黄金三章生成开篇：第1章：日常被打破，主角遭遇变故（必须发生事件，禁止纯背景介绍）；第2章：主角做出第一次主动选择，展示人物性格；第3章：抛出核心悬念，埋下全书最大伏笔，并以一个反转收尾。每章末尾必须留有继续阅读的钩子。', author: '爆款编辑组', meta: '4.9星 · 3000+使用' },
+            { title: '对话张力生成', cat: '对话生成', tags: ['台词', '潜台词'], desc: '生成符合人物性格、暗藏潜台词的对话，推进情节并揭示关系。', full: '请生成一段两人对话：1）性格：A 直接强势，B 迂回试探；2）表面话题与真实意图各一条，对话中 A 不断逼近真相，B 用反问与沉默防守；3）台词口语化，避免书面腔；4）在对话中揭示一条新信息，改变双方关系天平。', author: '剧本工坊', meta: '4.7星 · 800+使用' },
+            { title: '世界观设定框架', cat: '世界观构建', tags: ['设定', '体系'], desc: '构建自洽且有记忆点的世界观，覆盖力量体系、社会结构、历史脉络。', full: '请构建一个网文世界观：1）力量体系：升级路径、境界划分、获得与代价；2）社会结构：势力分布、资源分配、阶层矛盾；3）历史：三件塑造当前格局的重大事件；4）独特记忆点：一条让这个世界区别于其他作品的规则或设定。', author: '设定党联盟', meta: '4.8星 · 950+收藏' },
+            { title: '悬疑氛围营造', cat: '悬疑氛围', tags: ['节奏', '压迫感'], desc: '通过环境、细节与节奏控制营造悬疑氛围，让读者紧张到不敢喘气。', full: '请营造一段悬疑氛围：1）环境：选一个日常场景，加入一个不合理的细节；2）节奏：短句递进，段落越写越短；3）信息差：让读者知道主角不知道的事；4）声音：用重复出现的声音制造压迫；5）收尾：留下一个细思极恐的开放式悬念。', author: '推理迷社群', meta: '4.9星 · 2100+使用' },
+            { title: '冲突升级设计', cat: '冲突设计', tags: ['对抗', '张力'], desc: '设计层层递进的冲突，从口角到决裂，让对抗自然升温、张力拉满。', full: '请设计一场冲突升级戏：1）导火索：一个看似小事的分歧；2）三连升级：语言冲突→利益冲突→原则冲突，每次升级都有新信息加入；3）站队：旁观者被迫表态，扩大战场；4）不可逆：冲突结果改变人物关系，无法回到从前。', author: '爽文研究所', meta: '4.6星 · 700+使用' },
+            { title: '结局反转方案', cat: '结局设计', tags: ['闭环', '反转'], desc: '设计既能回收伏笔又出人意料的结局，给读者留下余韵。', full: '请设计一个结局：1）回收：全书所有主要伏笔逐一闭环；2）反转：最后揭示一个颠覆认知的真相（主角身份/幕后黑手/世界规则）；3）代价：胜利必有代价，避免圆满到失真；4）余韵：最后一句话让读者合上书后仍久久回味。', author: '完本作者联盟', meta: '4.8星 · 1100+收藏' },
+            { title: '反派动机构建', cat: '角色描写', tags: ['反派', '动机'], desc: '塑造有说服力的反派，让他的行为逻辑自洽，甚至让读者理解他。', full: '请塑造一个反派：1）立场：他相信自己在做正确的事；2）起源：哪件事让他走上这条路；3）原则：他坚持的底线与禁忌；4）与主角的镜像关系：他和主角有哪些相似之处，为何走向不同结局；5）一句能代表他世界观的台词。', author: '由专业编剧贡献', meta: '4.9星 · 1800+使用' },
+            { title: '群像角色塑造', cat: '人物塑造', tags: ['群像', '配角'], desc: '为配角群体设计差异化人设，让每个角色都有独立记忆点与成长线。', full: '请为一支主角团队设计群像：1）分工：每个角色的定位（头脑/武力/技术/后勤）互不重叠；2）记忆点：每人一个标志性习惯或口头禅；3）关系网：两两之间有隐藏的过往羁绊；4）高光：每个配角安排一个独属于自己的高光时刻；5）成长：至少一个配角拥有独立的故事线。', author: '长篇连载组', meta: '4.7星 · 900+使用' }
+          ];
+
+          var grid = document.getElementById('prompt-grid');
+          var searchInput = document.getElementById('prompt-search');
+          var catRow = document.getElementById('cat-row');
+          var currentCat = '全部';
+          var currentQuery = '';
+
+          function render() {
+            grid.innerHTML = '';
+            var q = currentQuery.trim().toLowerCase();
+            var matched = 0;
+            PROMPTS.forEach(function (p, i) {
+              var hitCat = currentCat === '全部' || p.cat === currentCat;
+              var hitQ = !q || (p.title + p.desc + p.tags.join('') + p.cat).toLowerCase().indexOf(q) >= 0;
+              if (!hitCat || !hitQ) return;
+              matched++;
+              var card = document.createElement('article');
+              card.className = 'prompt-card';
+              card.dataset.title = p.title;
+              card.innerHTML =
+                '<div class="tag-row"><span class="tag">' + p.cat + '</span>' + p.tags.map(function (t) { return '<span class="tag">' + t + '</span>'; }).join('') + '</div>' +
+                '<h3>' + p.title + '</h3>' +
+                '<p class="prompt-desc">' + p.desc + '</p>' +
+                '<div class="prompt-meta"><span>' + p.meta + '</span></div>' +
+                '<button class="btn btn-ghost" type="button" aria-expanded="false">查看详情</button>' +
+                '<div class="prompt-detail" hidden>' + p.full + '<div style="display:flex;gap:.75rem;align-items:center;margin-top:.875rem;"><button class="btn btn-primary" type="button" data-copy="' + i + '">复制提示词</button><span class="copy-ok" data-copy-ok="' + i + '" hidden>已复制 ✓</span></div></div>';
+              var detail = card.querySelector('.prompt-detail');
+              var toggleBtn = card.querySelector('.btn-ghost');
+              toggleBtn.setAttribute('aria-controls', 'detail-' + i);
+              detail.id = 'detail-' + i;
+              toggleBtn.addEventListener('click', function () {
+                var open = !detail.hidden;
+                detail.hidden = open;
+                toggleBtn.setAttribute('aria-expanded', String(!open));
+                toggleBtn.textContent = open ? '查看详情' : '收起详情';
+              });
+              var copyBtn = card.querySelector('[data-copy]');
+              copyBtn.addEventListener('click', function () {
+                var ok = card.querySelector('[data-copy-ok]');
+                ok.hidden = false;
+                setTimeout(function () { ok.hidden = true; }, 1600);
+              });
+              grid.appendChild(card);
+            });
+            if (!matched) {
+              var empty = document.createElement('div');
+              empty.className = 'empty-hint';
+              empty.textContent = '没有找到匹配的提示词，换个关键词试试。';
+              grid.appendChild(empty);
+            }
+          }
+
+          catRow.addEventListener('click', function (e) {
+            var chip = e.target.closest('.chip');
+            if (!chip) return;
+            currentCat = chip.dataset.cat;
+            catRow.querySelectorAll('.chip').forEach(function (c) {
+              c.setAttribute('aria-pressed', String(c === chip));
+            });
+            render();
+          });
+
+          searchInput.addEventListener('input', function () {
+            currentQuery = searchInput.value;
+            render();
+          });
+
+          render();
+        })();
+      </script>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </span>
+            日光写作
+          </div>
+          <p class="footer-desc">数十万创作者选择的 AI 写作工具，专为网络小说、剧本创作者打造。</p>
+        </div>
+        <nav class="footer-nav" aria-label="页脚导航">
+          <div>
+            <h3>产品</h3>
+            <a href="bookshelf.html">书架</a>
+            <a href="write.html">AI写作</a>
+            <a href="write.html">AI续写</a>
+            <a href="write.html">AI扩写润色</a>
+            <a href="write.html">AI拆书</a>
+          </div>
+          <div>
+            <h3>资源</h3>
+            <a href="prompts.html">提示词库</a>
+            <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-bottom">© 2026 日光写作 · 复刻演示项目 · 页面与功能为演示用 Mock 实现</div>
+    </footer>
+  </body>
+</html>
