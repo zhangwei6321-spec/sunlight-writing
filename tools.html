@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="日光写作 —— 创意工具箱：书名、简介、大纲、开篇、人设、世界观、脑洞、对标爆款等一站式创作工具。" />
+    <title>创意工具箱 | 日光写作</title>
+    <link rel="stylesheet" href="./theme.css" />
+    <style>
+      /* 工具箱局部样式 */
+      .tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .875rem; margin-bottom: 1.75rem; }
+      .tool-card { display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; text-align: left; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.125rem; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; font: inherit; }
+      .tool-card:hover { border-color: var(--color-primary); box-shadow: var(--shadow-pop); transform: translateY(-2px); }
+      .tool-card.active { border-color: var(--color-primary); background: var(--color-primary-soft); }
+      .tool-card .tc-icon { width: 2.25rem; height: 2.25rem; border-radius: 10px; background: var(--color-primary-soft); color: var(--color-primary-deep); display: flex; align-items: center; justify-content: center; flex: none; }
+      .tool-card.active .tc-icon { background: var(--gradient-primary); color: #fff; }
+      .tool-card .tc-name { font-weight: 700; font-size: .9375rem; color: var(--color-text); }
+      .tool-card .tc-desc { font-size: .8125rem; color: var(--color-muted-text); line-height: 1.5; }
+      .tool-panel { display: none; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.5rem; }
+      .tool-panel.active { display: block; }
+      .panel-head { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+      .panel-head h2 { margin: 0; font-size: 1.125rem; font-weight: 700; }
+      .panel-head p { margin: .125rem 0 0; font-size: .8125rem; color: var(--color-muted-text); }
+      .panel-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .875rem; align-items: end; margin-bottom: 1rem; }
+      .panel-form .field label { display: block; font-size: .8125rem; font-weight: 600; margin-bottom: .375rem; color: var(--color-primary-deep); }
+      .panel-form .field input, .panel-form .field select { width: 100%; }
+      .tool-result { border-top: 1px dashed var(--color-border); padding-top: 1rem; margin-top: .5rem; }
+      .tool-result[data-state="default"] { border: 0; padding: 0; margin: 0; color: var(--color-muted-text); font-size: .875rem; }
+      .tool-result .result-box { white-space: pre-line; background: var(--color-primary-soft); border-radius: 10px; padding: 1rem 1.125rem; font-size: .9375rem; line-height: 1.8; color: var(--color-primary-deep); }
+      .tool-history { margin-top: 1rem; border-top: 1px dashed var(--color-border); padding-top: .875rem; }
+      .tool-history .hist-title { font-size: .8125rem; font-weight: 700; color: var(--color-primary-deep); margin-bottom: .5rem; }
+      .tool-history .hist-list { display: flex; flex-direction: column; gap: .375rem; max-height: 220px; overflow: auto; }
+      .tool-history .hist-item { display: flex; align-items: center; gap: .625rem; width: 100%; text-align: left; border: 1px solid var(--color-border); border-radius: 8px; background: transparent; padding: .375rem .625rem; font-size: .8125rem; cursor: pointer; }
+      .tool-history .hist-item:hover { background: var(--color-primary-soft); }
+      .tool-history .hi-ts { flex: none; color: var(--color-muted-text); font-variant-numeric: tabular-nums; }
+      .tool-history .hi-theme { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text); }
+      .gen-btn { justify-self: start; }
+
+    </style>
+  </head>
+  <body data-page-id="tools">
+    <a class="skip-link" href="#main-content">跳转到主要内容</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="日光写作首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+          </span>
+          日光写作
+        </a>
+        <nav class="main-nav" aria-label="主导航">
+          <a href="bookshelf.html">书架</a>
+          <a href="write.html">AI写作</a>
+          <a href="prompts.html">提示词库</a>
+          <a href="ai-short.html">AI短篇</a>
+          <a href="tools.html" aria-current="page">创意工具箱</a>
+          <a href="settings.html">设置</a>
+        </nav>
+        <div class="header-actions">
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">菜单</button>
+          <a class="btn btn-primary" href="write.html">立即开始创作</a>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
+        <a href="bookshelf.html">书架</a>
+        <a href="write.html">AI写作</a>
+        <a href="prompts.html">提示词库</a>
+        <a href="ai-short.html">AI短篇</a>
+        <a href="tools.html">创意工具箱</a>
+        <a href="settings.html">设置</a>
+        <a class="btn btn-primary btn-block" href="write.html">立即开始创作</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <section class="section">
+        <div style="max-width:46rem;margin-bottom:1.75rem;">
+          <span class="section-eyebrow">创意工具箱</span>
+          <h1 class="section-title" style="margin-bottom:.375rem;">激发你的创作灵感</h1>
+          <p class="section-sub" style="margin:0;">从书名到世界观，覆盖小说与剧本创作全环节。选择一个工具开始吧。</p>
+        </div>
+
+        <div class="tool-grid" id="tool-grid" role="tablist" aria-label="创作工具列表"></div>
+        <div id="tool-panel-wrap"></div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </span>
+            日光写作
+          </div>
+          <p class="footer-desc">数十万创作者选择的 AI 写作工具，专为网络小说、剧本创作者打造。</p>
+        </div>
+        <nav class="footer-nav" aria-label="页脚导航">
+          <div>
+            <h3>产品</h3>
+            <a href="bookshelf.html">书架</a>
+            <a href="write.html">AI写作</a>
+            <a href="write.html">AI续写</a>
+            <a href="write.html">AI扩写润色</a>
+          </div>
+          <div>
+            <h3>资源</h3>
+            <a href="prompts.html">提示词库</a>
+            <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+            <a href="tools.html">大纲生成器</a>
+            <a href="tools.html">人设生成器</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-bottom">© 2026 日光写作 · 让灵感永不枯竭</div>
+    </footer>
+    <script>
+      (function () {
+        var toggle = document.querySelector('.menu-toggle');
+        var nav = document.getElementById('mobile-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', function () {
+            var open = nav.style.display === 'flex';
+            nav.style.display = open ? 'none' : 'flex';
+            toggle.setAttribute('aria-expanded', String(!open));
+          });
+        }
+
+        /* ===== 真实 AI 生成：复用 settings/ai-short 的智谱配置（localStorage rgyw_ai_config） ===== */
+        var AI_STORAGE_KEY = 'rgyw_ai_config';
+        var AI_DEFAULT_CONFIG = {
+          apiBase: 'https://open.bigmodel.cn/api/paas/v4',
+          apiKey: 'YOUR_API_KEY',
+          model: 'glm-4-flash',
+          maxTokens: '4096'
+        };
+        function getAiConfig() {
+          try { var raw = localStorage.getItem(AI_STORAGE_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+          return AI_DEFAULT_CONFIG;
+        }
+        function callChatApi(config, messages, onChunk, onDone, onErr) {
+          try {
+            var url = config.apiBase.replace(/\/+$/, '') + '/chat/completions';
+            fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.apiKey },
+              body: JSON.stringify({
+                model: config.model,
+                messages: messages,
+                max_tokens: parseInt(config.maxTokens) || 4096,
+                stream: true
+              })
+            }).then(function (resp) {
+              if (!resp.ok) {
+                return resp.text().then(function (txt) { onErr('请求失败（HTTP ' + resp.status + '）：' + txt.slice(0, 200)); });
+              }
+              var reader = resp.body.getReader();
+              var decoder = new TextDecoder();
+              var buffer = '';
+              var fullText = '';
+              function pump() {
+                return reader.read().then(function (_r) {
+                  if (_r.done) { onDone(fullText); return; }
+                  buffer += decoder.decode(_r.value, { stream: true });
+                  var lines = buffer.split('\n');
+                  buffer = lines.pop() || '';
+                  for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim();
+                    if (!line || line.indexOf('data:') !== 0) continue;
+                    var data = line.slice(5).trim();
+                    if (data === '[DONE]') { onDone(fullText); return; }
+                    try {
+                      var json = JSON.parse(data);
+                      var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
+                      if (delta) { fullText += delta; onChunk(fullText); }
+                    } catch (e2) {}
+                  }
+                  return pump();
+                });
+              }
+              return pump();
+            }).catch(function (e) {
+              onErr('网络错误：' + e.message);
+            });
+          } catch (e) {
+            onErr('调用错误：' + e.message);
+          }
+        }
+        function buildMessages(toolId, v) {
+          var type = v.type || '';
+          var theme = v.theme || '';
+          var user = '类型/定位：' + (type || '未指定') + '\n关键词/主题：' + (theme || '未指定');
+          var sys;
+          switch (toolId) {
+            case 'book': sys = '你是资深网文书名策划。根据作品类型与主题词，生成 5 个吸睛的书名，每行一个「《书名》」，要包含核心爽点或身份反差，避免雷同。直接输出，不要解释。'; break;
+            case 'intro': sys = '你是网文简介撰稿人。根据作品类型与主题，生成 3 段简介，每段 100-150 字，标注【简介一】【简介二】【简介三】，突出主角、悬念与爽点。直接输出，不要解释。'; break;
+            case 'outline': sys = '你是网文大纲架构师。根据故事主线，生成三卷大纲，格式：第一卷「卷名」：3-5 条要点；第二卷…第三卷…，覆盖起承转合、关键高潮与反转。直接输出，不要解释。'; break;
+            case 'detail': sys = '你是网文细纲写手。根据本章主题，生成一章细纲：分 4-6 个场景，每个场景含【场景名】【地点】【人物】【冲突/推进】【结尾钩子】。直接输出，不要解释。'; break;
+            case 'opener': sys = '你是网文黄金三章专家。根据作品类型与主角设定，写一段 250-350 字的开篇，第一句必须有冲击力，埋下悬念或冲突，结尾留钩子。直接输出正文，不要解释。'; break;
+            case 'cheat': sys = '你是网文金手指设计师。根据主角处境，设计 3 个金手指，每个标注【金手指一/二/三】：名称、核心能力、代价或限制、成长空间。直接输出，不要解释。'; break;
+            case 'name': sys = '你是起名专家。根据性别与姓氏/关键词，生成 6 个有辨识度的角色名，每行一个「名字 —— 寓意/气质」，风格贴合关键词。直接输出，不要解释。'; break;
+            case 'char': sys = '你是人设塑造师。根据角色定位与关键词，输出一张人设卡：姓名、性格底色、核心欲望、致命弱点、人物弧光、标志性动作、口头禅。直接输出，不要解释。'; break;
+            case 'cover': sys = '你是网文封面设计师。根据作品类型与书名/元素，给出 3 个封面创意方案，每个含【方案一/二/三】：画面主体、主色调、字体风格、构图建议。直接输出，不要解释。'; break;
+            case 'idea': sys = '你是网文脑洞策划。根据题材关键词，发散 3 个新颖的故事脑洞，用【脑洞一】【脑洞二】【脑洞三】标注，每个 2-3 句话，题材贴合、有反转、有新意，避免老套模板。直接输出，不要解释。'; break;
+            case 'test': sys = '你是网文市场编辑。对给出的书名做测试报告：热度评分（/100）、辨识度、记忆点、目标读者、优化建议（2-3 条）。直接输出，不要解释。'; break;
+            case 'world': sys = '你是世界观架构师。根据作品类型与核心设定，构建世界观：时代背景、社会结构、核心矛盾、独特设定、力量体系（如适用）。直接输出，不要解释。'; break;
+            case 'bench': sys = '你是爆款拆解分析师。拆解给出的对标作品：核心套路、爽点设计、节奏结构、人物塑造、可借鉴点、创新建议。直接输出，不要解释。'; break;
+            default: sys = '你是资深网文创作助手，根据输入生成高质量创作素材。直接输出，不要解释。';
+          }
+          return [{ role: 'system', content: sys }, { role: 'user', content: user }];
+        }
+
+        function brainstormIdeas(theme) {
+          var kw = String(theme || '').split(/[,，、;；\/\s]+/).filter(Boolean);
+          var s = kw.join('');
+          var has = function (a) { for (var i = 0; i < a.length; i++) if (s.indexOf(a[i]) > -1) return true; return false; };
+          var pick = function (a) { return a[(Math.random() * a.length) | 0]; };
+          var k = kw.length ? kw : ['穿越'];
+          var t = k.join('、');
+          var isLove = has(['追妻', '火葬场', '虐', '爱情', '恋爱', '情缘', '道侣', '悔婚', '渣', '前任', '白月光']);
+          var isXian = has(['修仙', '仙侠', '玄幻', '宗', '剑', '飞升', '灵', '魔', '道', '神', '妖', '丹']);
+          var isUrban = has(['都市', '现代', '职场', '总裁', '豪门', '医院', '娱乐圈', '商战']);
+          var isXuan = has(['悬疑', '推理', '灵异', '鬼', '侦探', '案件', '凶']);
+          var isKe = has(['科幻', '星际', '末世', '机甲', '赛博', 'AI', '未来', '废土']);
+          var isSchol = has(['读书', '科举', '书生', '功名', '状元', '赶考', '朝堂', '文人', '诗词', '八股', '寒门', '殿试', '进士']);
+          var scenes = ['宗门大典', '宗门大比', '婚礼现场', '登基大典', '毕业典礼', '家族晚宴', '末日降临', '拍卖会', '寿宴', '试炼大会'];
+          var twistPool = ['这场大典本身就是一场献祭', '所有人都在配合演同一场戏', '幕后黑手一直就在自己身边', '自己才是那个被选中的祭品', '所谓的天选者另有其人'];
+          var worldA = isXian ? '修仙界' : isUrban ? '都市' : isKe ? '星际联邦' : isXuan ? '这座城' : '这方天地';
+          var identA = isXian ? '剑修' : isUrban ? '商界大佬' : isKe ? '王牌舰长' : isXuan ? '传奇神探' : '高手';
+          var dailyPool = isXian ? ['被迫下山卖灵茶', '被迫给师侄当陪练', '被迫参加凡人厨艺大赛'] : isUrban ? ['被迫回老家开火锅店', '被迫当全职奶爸', '被迫去夜市摆摊'] : isKe ? ['被迫去废土捡垃圾', '被迫给AI当心理医生', '被迫在空间站当客服'] : isXuan ? ['被迫经营一家深夜书店', '被迫接手祖父的侦探社', '被迫在灵异直播间当主播'] : ['被迫切牛肉', '被迫带娃', '被迫扫大街'];
+          var eventPool = isXian ? ['卷入上古秘境的争夺', '撞破一场惊天阴谋', '被卷入正魔大战'] : isUrban ? ['卷入灵异食客事件', '被拉进神秘商业局', '撞破豪门丑闻'] : isKe ? ['卷入星际海盗的阴谋', '发现被遗忘的殖民星信号', '被卷入AI叛乱'] : isXuan ? ['卷入连环失踪案', '发现旧案的真相', '被拖入一场死亡游戏'] : ['卷入灵异食客事件', '被拉进一场诡异赌局', '撞破惊天的秘密'];
+          var out = ['基于「' + t + '」的 3 个脑洞：'];
+          if (isLove) {
+            out.push('【脑洞一】' + pick(['她死在', '她心死在', '她转身离开']) + pick(['第七十七次', '第九十九次', '第三十次']) + pick(['重生', '循环', '轮回']) + pick(['的雨夜', '的那一天', '的那一刻']) + '。这一次，' + pick(['他终于选择先奔向了她', '她决定不再等他回头', '他才发现她的日记里写满了他']));
+            out.push('【脑洞二】现代社畜猝死后魂穿成' + pick(['修仙界最渣的师尊', '豪门里冷血的总裁', '宫斗剧里将死的废后']) + '，面对' + pick(['黑化弟子扔过来的和离书', '妻子递来的离婚协议', '白月光递来的绝交信']) + '，系统提示：' + pick(['「追妻火葬场副本，正式开启」', '「挽回度 0%，请反向操作」', '「你已触发火葬场结局，浪子回头可翻盘」']));
+            out.push('【脑洞三】全' + pick(['宗门', '豪门', '后宫']) + '都知道他对' + pick(['夫人', '道侣', '发妻']) + '冷血无情，只有' + pick(['她', '主角', '贴身侍女']) + '知道——他每晚都在' + pick(['用命替她挡天道雷劫', '偷偷把最好的灵药塞进她的汤里', '替她背下所有骂名']) + '，而她浑然不觉。');
+          } else if (isSchol) {
+            out.push('【脑洞一】主角被困在' + pick(['会试放榜', '殿试结束', '乡试开考', '琼林宴']) + '当天的时间循环里，每次重置都会多记住一个细节，直到他发现' + pick(['金榜上的名字根本不属于自己', '这场科举本身就是一场布局', '所有考生都在陪他演同一场戏', '主考官看他的眼神藏着杀意']) + '。');
+            out.push('【脑洞二】' + pick(['现代历史系研究生', '资深社畜', '落魄编剧']) + '意外魂穿成' + pick(['赶考书生', '寒门秀才', '考场里打瞌睡的落榜生']) + '，被迫' + pick(['用文言文写八股', '在殿试上即兴作诗', '替主考官捉刀却写错了名字']) + '，却意外卷入' + pick(['一场科举舞弊案', '本朝最大的泄题阴谋', '一场文字狱风波']) + '。');
+            out.push('【脑洞三】所有人都以为他' + pick(['是不学无术的纨绔', '是个屡试不第的废柴书生', '是个只会吟风弄月的浪荡才子']) + '，只有主角知道——' + pick(['他交上去的每张考卷都藏着两套文章', '他每晚都在默写前世记忆里的治国策', '他那笔「平庸」的字，拆开看全是密文']) + '。');
+          } else {
+            out.push('【脑洞一】主角被困在' + pick(scenes) + '当天的时间循环里，每次重置都会多记住一个细节，直到他发现' + pick(twistPool) + '。');
+            out.push('【脑洞二】' + worldA + '第一' + identA + '意外' + pick(['穿越', '重生', '魂穿']) + '到' + pick(['现代火锅店', '新手村', '养老院', '幼儿园', '废土集市']) + '，' + pick(dailyPool) + '，却意外' + pick(eventPool) + '。');
+            out.push('【脑洞三】所有人都以为' + pick(['主角是个废柴', '掌门贪生怕死', '这座城要完了', '主角是那个背叛者']) + '，只有主角知道——' + pick(['掌门每晚都在偷偷毁灭世界线', '真正的幕后黑手是那个最不起眼的人', '自己才是这个世界最后的防火墙', '大家拼死守护的东西早已被换成了赝品']) + '。');
+          }
+          return out.join('\n');
+        }
+
+        function brainBook(t, th) {
+          var pools = {
+            '东方玄幻': { a: ['万古', '九霄', '不朽', '逆天', '混沌', '苍穹', '轮回', '焚天', '太虚', '荒古'], b: ['神帝', '剑尊', '武皇', '圣主', '丹神', '天骄', '至尊', '霸主', '道祖', '龙主'] },
+            '现代都市': { a: ['重生', '开局', '归来', '巅峰', '豪门', '隐龙', '狂龙', '不败', '荣耀', '王牌'], b: ['战神', '医仙', '总裁', '高手', '赘婿', '大佬', '王者', '巨擘', '天王', '首富'] },
+            '未来科幻': { a: ['星际', '末世', '纪元', '银河', '深渊', '进化', '次元', '苍穹', '代码', '星海'], b: ['黎明', '远征', '觉醒', '风暴', '救赎', '边缘', '迷航', '终点', '回响', '黄昏'] },
+            '悬疑推理': { a: ['无声', '暗夜', '迷雾', '第七', '午夜', '致命', '骸骨', '幽灵', '沉默', '连环'], b: ['证词', '谜局', '追凶', '真相', '名单', '来电', '档案', '拼图', '葬礼', '告白'] },
+            '古风仙侠': { a: ['青云', '太初', '紫霄', '长生', '红尘', '九重', '忘川', '蓬莱', '月隐', '沧海'], b: ['仙缘', '问道', '剑歌', '渡劫', '飞升', '情劫', '浮生', '轮回', '归墟', '长歌'] },
+            '浪漫爱情': { a: ['偏偏', '余生', '心动', '暖阳', '初雪', '星光', '温柔', '偏爱', '错过', '告白'], b: ['是你', '相守', '未晚', '不负', '有晴', '入怀', '可期', '同行', '至深', '予你'] },
+            '青春校园': { a: ['那年', '盛夏', '同桌', '十七', '告白', '年少', '时光', '初见', '薄荷', '晚风'], b: ['有你', '心动', '正好', '未央', '予你', '轻狂', '如初', '可期', '你好', '再见'] },
+            '赛博朋克': { a: ['霓虹', '义体', '黑客', '废都', '赛博', '极夜', '信号', '齿轮', '脉冲', '深渊'], b: ['觉醒', '迷城', '革命', '协议', '边界', '记忆', '代号', '纪元', '逆流', '残响'] },
+            '西方魔幻': { a: ['圣光', '龙裔', '暗影', '王座', '终焉', '奇迹', '权杖', '月冕', '深渊', '猎魔'], b: ['之巅', '觉醒', '纪元', '战争', '契约', '低语', '回响', '审判', '黄昏', '圣战'] }
+          };
+          var p = pools[t] || pools['东方玄幻'];
+          var out = [];
+          for (var i = 0; i < 5; i++) out.push('《' + p.a[(p.a.length * Math.random()) | 0] + (th || '') + p.b[(p.b.length * Math.random()) | 0] + '》');
+          return '为你生成 5 个「' + t + '」类书名：\n' + out.join('\n');
+        }
+
+        function brainIntro(t, th) {
+          var main = th || (t.indexOf('都市') > -1 ? '商海沉浮' : '少年复仇');
+          var tpl = [
+            '十年前，' + main + '让他失去一切；十年后，他带着一身秘密归来。当所有人都以为他只是个普通人时，那些曾经践踏过他的人，正在一个接一个地付出代价。',
+            '所有人都以为' + main + '已经落幕，直到他重新站上舞台。这一次，他不为复仇，只为拿回本该属于自己的一切——包括，那个人的仰望。',
+            '他本可以继续沉默，但' + main + '逼他不得不亮剑。从今天起，这条路要么通向巅峰，要么通向深渊，而他，从来只选前者。'
+          ];
+          return '《' + main + '》简介（' + t + '）：\n' + tpl[(Math.random() * tpl.length) | 0] + (t.indexOf('都市') > -1 ? '\n\n一场横跨商海与情仇的逆袭大幕，就此拉开。' : '\n\n且看他如何一步步踏上巅峰，问鼎这方天地。');
+        }
+
+        function brainOutline(th) {
+          var main = th || '废材少年集齐七把神剑';
+          var t1 = ['核心对手浮出水面', '第一条感情线悄然展开', '金手指的第一重代价显现', '隐藏的旧日真相露出冰山一角'];
+          var t2 = ['主角完成第一次蜕变', '埋下的所有伏笔集中引爆', '身世之谜揭开一角', '阵营与立场迎来首次洗牌'];
+          return '《' + main + '》三卷大纲：\n【第一卷 起势】围绕「' + main + '」，主角登场、遭遇变故，核心冲突与金手指觉醒。卷末：' + t1[(Math.random() * t1.length) | 0] + '。\n【第二卷 扬名】中段成长，结识盟友、初战强敌，把「' + main + '」推向第一个大高潮。卷末：' + t2[(Math.random() * t2.length) | 0] + '。\n【第三卷 问鼎】终局对决，真相揭晓，主角完成蜕变，收束所有伏笔，最终回应开篇埋下的钩子。';
+        }
+
+        function brainDetail(th) {
+          var main = th || '主角初入宗门，遭遇刁难';
+          var parts = main.split(/[，,]/);
+          var scene = parts[0] || '山门前';
+          var clash = parts[1] || '矛盾一触即发';
+          var steps = [
+            '1. 场景：' + scene + '，气氛微妙。\n2. 冲突：' + clash + '，主角不卑不亢。\n3. 转折：一个意料之外的人/物突然出现，局面反转。\n4. 推进：主角借此拿到关键线索，却也因此暴露了更多。\n5. 钩子：一句意味深长的话，引出下章悬念。',
+            '1. 开场：直接切入「' + main + '」的画面，不做铺垫。\n2. 递进：对方步步紧逼，主角退无可退。\n3. 反转：主角亮出底牌，局势瞬间逆转。\n4. 余波：胜利的代价浮出水面。\n5. 钩子：暗处传来一声轻笑——「有意思。」'
+          ];
+          return '本章细纲（' + main + '）：\n' + steps[(Math.random() * steps.length) | 0];
+        }
+
+        function brainOpener(t, th) {
+          var lead = th || '被废丹田的剑修';
+          var leads = {
+            '东方玄幻': ['夜色如墨，' + lead + '立于万丈孤峰之上。风掠过衣角，带来山门方向隐约的钟声——那是宗门大典的号令，与他无关，已有三年。', '三年前，他是宗门最耀眼的天才；三年后，他是人人避之不及的废人。', '可没有人知道，他袖中那枚古玉，今夜正在发烫。'],
+            '现代都市': ['写字楼顶层，' + lead + '缓缓放下电话。对面的人已经笑不出来：「你……到底是谁？」', '他微笑，按下遥控器，整层楼的灯光同时熄灭。', '「一个回来收账的人。」'],
+            '未来科幻': ['冷冻舱开启的瞬间，' + lead + '听见系统冰冷的提示音：「欢迎回到地球。战争……还没结束。」', '舱外，废墟之上，一支枪口正对着他的眉心。', '而系统下一句是：「检测到叛军身份，通缉令已全网广播。」'],
+            '悬疑推理': ['凌晨三点，' + lead + '接到第七通无声电话。', '这一次，听筒里传来一个熟悉的声音：「你终于接电话了。」', '那是三年前，本该已经死去的搭档。'],
+            '古风仙侠': ['山雨欲来，' + lead + '负剑独行于长街。', '两侧茶楼里，无数目光或明或暗地落在他身上。', '今日，是他被逐出师门整整十年后，第一次回城。'],
+            '浪漫爱情': ['她收到一封迟到了七年的信。', '落款是他，邮戳是今天。', '信里只有一行字：「我回来了。这次，换我追你。」']
+          };
+          var pool = leads[t] || leads['东方玄幻'];
+          return '「' + t + '」开篇方案：\n' + pool.join('\n');
+        }
+
+        function brainCheat(th) {
+          var main = th || '穿越到弱肉强食的修仙界';
+          var pool = [
+            '【选择一 · 吞噬进化】可吞噬他人功法/血脉进化，代价是每次吞噬都会引来天劫，且吞噬越多，天劫越强。',
+            '【选择二 · 模拟轮回】濒死时可重开人生，但每次重开都会遗忘一段记忆——直到某天，他忘了自己是谁。',
+            '【选择三 · 万界商城】可跨世界兑换资源，但越强大的物品，需要付出的代价越诡异：有时是十年寿命，有时是一段感情。',
+            '【选择四 · 因果簿】能看到每个人头顶的因果线，但每插手一次，自己的因果线就会粗一分。',
+            '【选择五 · 作弊面板】每天可让一个「不可能」变成「可能」，但每月必须完成一个系统指定的荒诞任务。',
+            '【选择六 · 万物复制】接触过的东西都能复制，但复制品会不断「提醒」它来自谁——包括那些他不想再见的人。'
+          ];
+          var tips = [
+            '提示：金手指越早亮出规则，越早埋下代价伏笔，后期越不容易崩。',
+            '提示：金手指的代价最好与主角的核心欲望冲突，才最能制造戏剧张力。',
+            '提示：可以考虑让金手指有「成长性」——前期小用、后期大用，能力边界逐步展开。'
+          ];
+          var out = ['金手指方案（基于：' + main + '）：'];
+          for (var i = 0; i < 3; i++) out.push(pool.splice((Math.random() * pool.length) | 0, 1)[0]);
+          out.push('\n' + tips[(Math.random() * tips.length) | 0]);
+          return out.join('\n');
+        }
+
+        function brainName(t, th) {
+          var s = th || '林';
+          var pools = {
+            '男': { a: ['一', '清', '之', '云', '晚', '明', '若', '天', '无', '千', '子', '承'], b: ['尘', '霜', '岚', '歌', '澜', '鹤', '影', '曦', '墨', '瑾', '渊', '珩'] },
+            '女': { a: ['若', '云', '晚', '苏', '月', '初', '沐', '颜', '安', '诗', '芷', '晴'], b: ['汐', '瑶', '宁', '萱', '婉', '柔', '菱', '伊', '岚', '雪', '梦', '漪'] },
+            '中性': { a: ['一', '清', '云', '明', '若', '天', '子', '安'], b: ['尘', '霜', '岚', '歌', '澜', '影', '曦', '墨'] }
+          };
+          var p = pools[t] || pools['中性'];
+          var out = [];
+          for (var i = 0; i < 6; i++) out.push(s + p.a[(p.a.length * Math.random()) | 0] + p.b[(p.b.length * Math.random()) | 0]);
+          return '为' + t + '角色生成的名字：\n' + out.join('、');
+        }
+
+        function brainChar(t, th) {
+          var main = th || '外冷内热';
+          var roles = {
+            '主角': ['获得尊重 / 守护重要之人', '重情、易被利用', '从隐忍到爆发，从逃避到直面'],
+            '反派': ['证明自己 / 拿回被夺走的一切', '偏执、不肯认输', '从高高在上到一败涂地，或走向意外的救赎'],
+            '配角': ['追随/成全主角，或守住自己的坚持', '立场摇摆、能力有限', '从旁观者到并肩者'],
+            '女主/男主': ['双向奔赴 / 彼此成就', '嘴硬心软、习惯独自扛下所有', '从误会到和解，从试探到笃定']
+          };
+          var r = roles[t] || roles['主角'];
+          var names = ['林', '苏', '顾', '沈', '陆', '楚', '白', '姜'];
+          var acts = ['沉默时习惯摩挲左腕旧疤', '说话前总先笑一下', '紧张时会无意识转笔', '习惯性地替别人挡在身前'];
+          var words = ['\u201c无妨。\u201d', '\u201c有意思。\u201d', '\u201c别担心，有我在。\u201d', '\u201c我早就说过。\u201d'];
+          return '「' + t + '」人设卡：\n姓名：' + names[(Math.random() * names.length) | 0] + '（暂定）\n性格底色：' + main + '\n核心欲望：' + r[0] + '\n致命弱点：' + r[1] + '\n人物弧光：' + r[2] + '\n标志性动作：' + acts[(Math.random() * acts.length) | 0] + '\n口头禅：' + words[(Math.random() * words.length) | 0];
+        }
+
+        function brainCover(t, th) {
+          var main = th || '九霄剑帝';
+          var styles = {
+            '东方玄幻': ['冷色苍穹下，一柄黑剑悬于云海之上，主角背对镜头，衣袂翻飞。', '特写：主角持剑而立，剑尖滴血，背景是燃烧的宗门。', '极简风：大留白 + 书名烫金大字 + 一抹剑光斜贯画面。'],
+            '现代都市': ['夜晚的城市天际线，主角立于落地窗前，俯瞰万家灯火。', '黑白质感：西装革履的主角逆光而来，身后是燃烧的豪车。', '极简风：深色底 + 书名银白字 + 一枚低调的戒指特写。'],
+            '未来科幻': ['冷蓝光效：主角的机甲立于星际废墟，远处是即将坍缩的恒星。', '赛博夜景：霓虹与代码雨之间，主角回头，义眼亮起。', '极简风：纯黑底 + 书名荧光字 + 一行暗码。'],
+            '悬疑推理': ['昏暗的走廊尽头，一扇半掩的门透出光，地上拖着一道血迹。', '特写：一枚带血的证物袋，背景是模糊的雨夜警局。', '极简风：黑白分屏 + 书名红色字 + 一只眼睛剪影。'],
+            '古风仙侠': ['水墨长卷：仙山云海之间，一人一剑踏空而行。', '工笔特写：主角负剑立于城楼，衣袂翻飞，身后是漫天符箓。', '极简风：留白 + 竖排书名烫金 + 一枚古玉垂坠。'],
+            '浪漫爱情': ['暖光逆光：两人在漫天樱花下相视，距离一臂之遥。', '电影感：雨天的公交站，他举着伞朝她跑去。', '极简风：浅色底 + 书名手写体 + 一句情话小字。']
+          };
+          var pool = styles[t] || styles['东方玄幻'];
+          var idx = [];
+          while (idx.length < 3) { var r = (Math.random() * pool.length) | 0; if (idx.indexOf(r) < 0) idx.push(r); }
+          var out = ['《' + main + '》封面方案（' + t + '）：'];
+          var nums = ['一', '二', '三'];
+          for (var i = 0; i < 3; i++) out.push('【方案' + nums[i] + '】' + pool[idx[i]]);
+          out.push('\n提示：封面生成图可交给「图片生成」能力完成，这里先确定构图方向。');
+          return out.join('\n');
+        }
+
+        function brainWorld(t, th) {
+          var main = th || '灵气复苏后的宗门时代';
+          var systems = {
+            '东方玄幻': '凡境 → 灵境 → 圣境 → 帝境，每境九重，越阶即天堑',
+            '现代都市': 'E 级 → D 级 → C 级 → B 级 → A 级 → S 级觉醒者，越级即禁区',
+            '未来科幻': '公民 → 领航员 → 舰长 → 执政官 → 星主，权限逐级解锁',
+            '悬疑推理': '目击者 → 证人 → 嫌疑 → 真凶，认知越深，越接近深渊',
+            '古风仙侠': '炼气 → 筑基 → 金丹 → 元婴 → 化神，一步一劫',
+            '浪漫爱情': '初见 → 心动 → 暧昧 → 误会 → 和解 → 相守',
+            '青春校园': '同桌 → 朋友 → 挚友 → 恋人，一步之遥，万水千山',
+            '赛博朋克': '灰区 → 黑市 → 上层区 → 云端，阶层即牢笼',
+            '西方魔幻': '学徒 → 法师 → 大法师 → 传奇，魔力即命运'
+          };
+          var forces = {
+            '东方玄幻': '一宗两阁三世家，表面同气连枝，暗中互相倾轧',
+            '现代都市': '官方觉醒者协会与地下暗网势力，明争暗斗',
+            '未来科幻': '联邦议会与星际海盗，秩序与混沌并存',
+            '悬疑推理': '老牌警局与地下情报掮客，真相被层层掩埋',
+            '古风仙侠': '正道七宗与魔道五脉，千年来互有胜负',
+            '浪漫爱情': '两个家族、两段旧怨，横亘在两人之间',
+            '青春校园': '重点班与普通班、校方与社团，青春自有江湖',
+            '赛博朋克': '巨型企业与街头帮派，赛博世界的光与影',
+            '西方魔幻': '光明教会与黑暗议会，千年圣战从未停歇'
+          };
+          var tabs = ['灵气越浓郁的地方，机缘越多，争斗也越残酷', '规则越是森严的地方，暗处的交易越是疯狂', '越靠近权力核心，代价越沉重，真相越稀少', '所有人都在追逐的东西，往往只是上层设下的饵'];
+          var ban = ['帝境之上有「天」的存在，触及者皆消失', '这座城市里，「失踪」比「死亡」更常见', '那扇门后的一切，被所有势力心照不宣地抹去', '禁忌之所以是禁忌，是因为有人曾经试过'];
+          return '「' + t + '」世界观框架：\n时代背景：' + main + '。\n力量体系：' + (systems[t] || systems['东方玄幻']) + '。\n势力格局：' + (forces[t] || forces['东方玄幻']) + '。\n核心规则：' + tabs[(Math.random() * tabs.length) | 0] + '。\n禁忌设定：' + ban[(Math.random() * ban.length) | 0] + '。';
+        }
+
+        function brainBench(th) {
+          var main = th || '斗破苍穹';
+          var opens = ['三章内完成「低谷设定 + 金手指 + 第一个打脸」，节奏极快', '开局即冲突，用一场「羞辱」快速立住主角处境', '第一章就亮出金手指规则，让读者快速进入期待', '用「退婚/被逐」制造情绪钩子，开局即爽点'];
+          var mains = ['升级-挑战-打脸循环，每卷一个明确大目标', '地图逐步开放：小地方 → 大舞台 → 天下棋局', '配角工具化：每个阶段的对手都是下一阶段的路标', '感情线克制推进，主线永远优先于支线'];
+          var rhythms = ['每 3-5 章一个小高潮，每卷一个大高潮', '爽点密度高：每章至少一个「期待-满足」闭环', '打脸讲究层层递进，先小后大，最后反转全场'];
+          var learns = ['金手指带成长代价，升级才有实感', '配角的工具化使用，出场即功能', '地图逐步开放，保持新鲜感', '每卷收束伏笔的同时，埋下新的钩子'];
+          var news = ['避免同质化，建议在开局方式、金手指规则上做差异', '可以在「爽点节奏」上做变化：前期加速、后期放慢', '建议把最反套路的设计放在开局三章，快速建立辨识度'];
+          return '《' + main + '》拆解报告：\n【开局】' + opens[(Math.random() * opens.length) | 0] + '。\n【主线】' + mains[(Math.random() * mains.length) | 0] + '。\n【爽点节奏】' + rhythms[(Math.random() * rhythms.length) | 0] + '。\n【可借鉴】' + learns[(Math.random() * learns.length) | 0] + '。\n【可创新】' + news[(Math.random() * news.length) | 0] + '。';
+        }
+
+        var TYPES = ['东方玄幻', '现代都市', '未来科幻', '悬疑推理', '古风仙侠', '浪漫爱情', '青春校园', '赛博朋克', '西方魔幻'];
+        var ICONS = ['书', '介', '纲', '细', '开', '金', '名', '人', '封', '脑', '测', '世', '对'];
+        var tools = [
+          { id: 'book', name: '书名生成器', desc: '创造吸引眼球的标题，让读者第一眼就被吸引', fields: [['select', 'type', '作品类型', TYPES], ['input', 'theme', '主题词', '如：废柴逆袭、仙帝归来']], generate: function (v) { return brainBook(v.type, v.theme); } },
+          { id: 'intro', name: '简介生成器', desc: '简洁有力的内容概述，让读者迫不及待想了解更多', fields: [['select', 'type', '作品类型', TYPES], ['input', 'theme', '故事主题', '如：少年复仇、末世求生']], generate: function (v) { return brainIntro(v.type, v.theme); } },
+          { id: 'outline', name: '大纲生成器', desc: '构建完整的故事脉络，让创作有条不紊', fields: [['input', 'theme', '故事主线', '如：废材少年集齐七把神剑']], generate: function (v) { return brainOutline(v.theme); } },
+          { id: 'detail', name: '细纲生成器', desc: '规划每个章节的细节，为创作提供清晰路线图', fields: [['input', 'theme', '本章主题', '如：主角初入宗门，遭遇刁难']], generate: function (v) { return brainDetail(v.theme); } },
+          { id: 'opener', name: '黄金开篇生成器', desc: '创作引人入胜的开头，一开篇就抓住读者', fields: [['select', 'type', '作品类型', TYPES], ['input', 'theme', '主角设定', '如：被废丹田的剑修']], generate: function (v) { return brainOpener(v.type, v.theme); } },
+          { id: 'cheat', name: '金手指生成器', desc: '设计出人意料的金手指，让故事充满惊喜', fields: [['input', 'theme', '主角处境', '如：穿越到弱肉强食的修仙界']], generate: function (v) { return brainCheat(v.theme); } },
+          { id: 'name', name: '名字生成器', desc: '为角色、地点和物品创建独特而贴切的名称', fields: [['select', 'type', '性别', ['男', '女', '中性']], ['input', 'theme', '姓氏/关键词', '如：林、苏（可留空）']], generate: function (v) { return brainName(v.type, v.theme); } },
+          { id: 'char', name: '人设生成器', desc: '打造立体饱满的角色形象，让角色栩栩如生', fields: [['select', 'type', '角色定位', ['主角', '反派', '配角', '女主/男主']], ['input', 'theme', '角色关键词', '如：清冷、隐忍、扮猪吃虎']], generate: function (v) { return brainChar(v.type, v.theme); } },
+          { id: 'cover', name: '封面生成', desc: '为作品生成封面创意方案', fields: [['select', 'type', '作品类型', TYPES], ['input', 'theme', '书名/元素', '如：九霄剑帝']], generate: function (v) { return brainCover(v.type, v.theme); } },
+          { id: 'idea', name: '脑洞生成', desc: '从题材关键词发散故事脑洞', fields: [['input', 'theme', '题材关键词', '如：时间循环、宗门、火锅店']], generate: function (v) { return brainstormIdeas(v.theme); } },
+          { id: 'test', name: '书名测试', desc: '评估书名吸引力并给出优化建议', fields: [['input', 'theme', '输入书名', '如：万古剑帝']], generate: function (v) { var n = v.theme || '未命名'; var score = 60 + ((n.length * 7) % 35); var tip = score > 80 ? '书名辨识度高，关键词明确，很有爆款潜质。' : (score > 65 ? '书名尚可，建议强化「主角身份/核心爽点」的关键词。' : '书名偏平淡，建议加入「万古/都市/开局/归来」等高点击词。'); return '《' + n + '》测试报告：\n热度评分：' + score + '/100\n辨识度：' + (score > 75 ? '高' : '中') + '　记忆点：' + (n.length <= 6 ? '好记' : '偏长') + '\n优化建议：' + tip; } },
+          { id: 'world', name: '世界观生成', desc: '构建独特的故事背景设定', fields: [['select', 'type', '作品类型', TYPES], ['input', 'theme', '核心设定', '如：灵气复苏后的宗门时代']], generate: function (v) { return brainWorld(v.type, v.theme); } },
+          { id: 'bench', name: '对标爆款', desc: '拆解热门作品结构与写作技巧', fields: [['input', 'theme', '对标作品', '如：斗破苍穹']], generate: function (v) { return brainBench(v.theme); } }
+        ];
+
+        var grid = document.getElementById('tool-grid');
+        var wrap = document.getElementById('tool-panel-wrap');
+        var current = 'book';
+
+        function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+        function renderGrid() {
+          grid.innerHTML = '';
+          tools.forEach(function (t, i) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tool-card' + (t.id === current ? ' active' : '');
+            btn.setAttribute('role', 'tab');
+            btn.setAttribute('aria-selected', String(t.id === current));
+            btn.dataset.tool = t.id;
+            btn.innerHTML = '<span class="tc-icon" aria-hidden="true">' + ICONS[i] + '</span><span class="tc-name">' + t.name + '</span><span class="tc-desc">' + t.desc + '</span>';
+            btn.addEventListener('click', function () { selectTool(t.id); });
+            grid.appendChild(btn);
+          });
+        }
+
+        /* ===== 生成历史持久化：localStorage 快存 + 服务端 data/tools.json 备份 ===== */
+        var TOOLS_HIST_KEY = 'rgyw_tools_history_v1';
+        var _thTimer = null;
+        function getToolHistories() {
+          try { var raw = localStorage.getItem(TOOLS_HIST_KEY); if (raw) { var arr = JSON.parse(raw); if (Array.isArray(arr)) return arr; } } catch (e) {}
+          return [];
+        }
+        function saveToolHistory(toolId, values, result) {
+          var arr = getToolHistories();
+          arr.push({ tool: toolId, values: values, result: result, ts: Date.now() });
+          if (arr.length > 100) arr = arr.slice(arr.length - 100);
+          try { localStorage.setItem(TOOLS_HIST_KEY, JSON.stringify(arr)); } catch (e) {}
+          clearTimeout(_thTimer);
+          _thTimer = setTimeout(function () {
+            try {
+              fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'tools', data: { history: getToolHistories(), savedAt: new Date().toISOString() } }) }).catch(function () {});
+            } catch (e) {}
+          }, 500);
+        }
+        function renderToolHistory(toolId, box) {
+          if (!box) return;
+          var items = getToolHistories().filter(function (h) { return h.tool === toolId; }).slice(-8).reverse();
+          if (!items.length) { box.innerHTML = ''; return; }
+          var html = '<div class="hist-title">最近生成历史（点击可回看）</div><div class="hist-list">';
+          items.forEach(function (h, i) {
+            var theme = '';
+            var v = h.values || {};
+            for (var k in v) { if (v[k]) { theme = v[k]; break; } }
+            var d = new Date(h.ts);
+            var ts = (d.getMonth() + 1) + '-' + d.getDate() + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+            html += '<button type="button" class="hist-item" data-hi="' + i + '"><span class="hi-ts">' + ts + '</span><span class="hi-theme">' + escapeHtml(String(theme).slice(0, 24)) + '</span></button>';
+          });
+          html += '</div>';
+          box.innerHTML = html;
+          box.querySelectorAll('.hist-item').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              var idx = Number(btn.getAttribute('data-hi'));
+              var h = getToolHistories().filter(function (x) { return x.tool === toolId; }).slice(-8).reverse()[idx];
+              if (!h) return;
+              var rb = document.querySelector('[data-result="' + toolId + '"]');
+              if (rb) { rb.setAttribute('data-state', 'complete'); rb.innerHTML = '<div class="result-box">' + escapeHtml(h.result) + '</div>'; }
+            });
+          });
+        }
+        function backfillFields(toolId) {
+          var arr = getToolHistories().filter(function (h) { return h.tool === toolId; });
+          if (!arr.length) return;
+          var v = (arr[arr.length - 1].values) || {};
+          for (var k in v) {
+            var el = document.getElementById('f-' + toolId + '-' + k);
+            if (el) el.value = v[k];
+          }
+        }
+        function restoreToolsFromServer() {
+          try {
+            fetch('/api/data?key=tools').then(function (r) { return r.json(); }).then(function (res) {
+              if (!res || !res.ok || !res.data || !res.data.history || !Array.isArray(res.data.history)) return;
+              var local = getToolHistories();
+              var localSaved = '';
+              try { var lw = JSON.parse(localStorage.getItem('rgyw_tools_savedat') || 'null'); localSaved = lw || ''; } catch (e) {}
+              var needMerge = (res.data.savedAt || '') > localSaved;
+              if (!needMerge && local.length) return;
+              if (needMerge && res.data.history.length) {
+                var map = {};
+                local.forEach(function (h) { map[h.tool + '|' + h.ts] = 1; });
+                res.data.history.forEach(function (h) { if (h && !map[h.tool + '|' + h.ts]) local.push(h); });
+                try { localStorage.setItem(TOOLS_HIST_KEY, JSON.stringify(local)); } catch (e2) {}
+              }
+              try { localStorage.setItem('rgyw_tools_savedat', JSON.stringify(res.data.savedAt || '')); } catch (e2) {}
+              renderToolHistory(current, document.querySelector('[data-history="' + current + '"]'));
+            }).catch(function () {});
+          } catch (e) {}
+        }
+
+        function renderPanel() {
+          var t = tools.filter(function (x) { return x.id === current; })[0];
+          var fieldsHtml = t.fields.map(function (f) {
+            var kind = f[0], key = f[1], label = f[2], ph = f[3] || '';
+            var control;
+            if (kind === 'select') {
+              var opts = ph.map(function (o) { return '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>'; }).join('');
+              control = '<select data-ctl="' + key + '">' + opts + '</select>';
+            } else {
+              control = '<input data-ctl="' + key + '" type="text" placeholder="' + escapeHtml(ph) + '" autocomplete="off" />';
+            }
+            return '<div class="field"><label data-lbl="' + key + '">' + label + '</label>' + control + '</div>';
+          }).join('');
+          wrap.innerHTML =
+            '<div class="tool-panel active" role="tabpanel" data-tool-panel="' + t.id + '">' +
+              '<div class="panel-head"><h2>' + t.name + '</h2><p>' + t.desc + '</p></div>' +
+              '<form class="panel-form" data-form="' + t.id + '" aria-label="' + t.name + '参数">' + fieldsHtml +
+                '<button class="btn btn-primary gen-btn" type="submit">生成</button>' +
+              '</form>' +
+              '<div class="tool-result" data-state="default" data-result="' + t.id + '">选择参数后点击「生成」，为你产出创作素材。</div>' +
+              '<div class="tool-history" data-history="' + t.id + '"></div>' +
+            '</div>';
+          // 动态建立 label 与控件关联，避免模板拼接被静态解析
+          wrap.querySelectorAll('[data-ctl]').forEach(function (el) {
+            var key = el.dataset.ctl;
+            el.id = 'f-' + t.id + '-' + key;
+            var lbl = wrap.querySelector('[data-lbl="' + key + '"]');
+            if (lbl) lbl.setAttribute('for', el.id);
+          });
+          backfillFields(t.id);
+          renderToolHistory(t.id, wrap.querySelector('[data-history="' + t.id + '"]'));
+          wrap.querySelector('[data-form]').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var values = {};
+            t.fields.forEach(function (f) {
+              var el = document.getElementById('f-' + t.id + '-' + f[1]);
+              values[f[1]] = el.value.trim();
+            });
+            var box = document.querySelector('[data-result="' + t.id + '"]');
+            box.setAttribute('data-state', 'loading');
+            box.innerHTML = 'AI 生成中…（首次调用稍慢）';
+            var config = getAiConfig();
+            var msgs = buildMessages(t.id, values);
+            callChatApi(config, msgs,
+              function (full) {
+                box.innerHTML = '<div class="result-box">' + escapeHtml(full) + '</div>';
+              },
+              function (full) {
+                box.setAttribute('data-state', 'complete');
+                box.innerHTML = '<div class="result-box">' + escapeHtml(full) + '</div>';
+                saveToolHistory(t.id, values, full);
+                renderToolHistory(t.id, wrap.querySelector('[data-history="' + t.id + '"]'));
+              },
+              function (err) {
+                box.setAttribute('data-state', 'error');
+                box.innerHTML = '<div class="result-box">生成失败：' + escapeHtml(err) + '<br>请在「设置」页检查 AI 接口配置（apiBase / apiKey / model），或确认网络可用。</div>';
+              }
+            );
+          });
+        }
+
+        function selectTool(id) { current = id; renderGrid(); renderPanel(); }
+        renderGrid();
+        renderPanel();
+        restoreToolsFromServer();
+
+      })();
+    </script>
+  </body>
+</html>
