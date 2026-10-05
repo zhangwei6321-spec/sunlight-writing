@@ -1,0 +1,1189 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="日光写作 —— AI 短篇：35 条 DeepSeek 精选创作指令，点击展开查看全文，一键复制即可开始创作。" />
+    <title>AI 短篇 | 日光写作</title>
+    <link rel="stylesheet" href="./theme.css" />
+    <script src="./assets/ai-short-prompts.js"></script>
+    <style>
+      /* AI 短篇页面样式 */
+      .short-hero { max-width: 46rem; margin-bottom: 1.75rem; }
+      .short-groups { display: flex; flex-direction: column; gap: .75rem; max-width: 52rem; }
+      .short-group { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); overflow: hidden; transition: box-shadow .15s ease; }
+      .short-group:hover { box-shadow: var(--shadow-pop); }
+      .sg-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; width: 100%; padding: .875rem 1.125rem; background: transparent; border: 0; font: inherit; font-weight: 700; font-size: .9375rem; color: var(--color-text); cursor: pointer; text-align: left; }
+      .sg-head:hover { background: var(--color-primary-soft); }
+      .sg-head[aria-expanded="true"] { background: var(--color-primary-soft); color: var(--color-primary-deep); }
+      .sg-count { font-size: .75rem; color: var(--color-muted-text); font-weight: 600; flex: none; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: .125rem .5rem; }
+      .sg-body { display: none; border-top: 1px dashed var(--color-border); }
+      .sg-body.open { display: block; }
+      /* 对话框式布局 */
+      .workbench { padding: 2.5rem 1.5rem 4rem; }
+      .workbench-inner { display: block; max-width: 76rem; margin: 0 auto; }
+      .split-layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1.25rem; align-items: stretch; }
+      .chat-col { min-width: 0; }
+      .preview-col { min-width: 0; }
+      .preview-panel { display: flex; flex-direction: column; min-height: 74vh; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop); overflow: hidden; }
+      .preview-head { display: flex; align-items: center; gap: .75rem; padding: .875rem 1.125rem; border-bottom: 1px solid var(--color-border); }
+      .preview-title { font-size: .9375rem; font-weight: 700; color: var(--color-text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .preview-wc { font-size: .75rem; color: var(--color-muted-text); font-weight: 600; margin-left: auto; flex: none; }
+      .preview-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 1.5rem 1.5rem 2rem; overflow-y: auto; }
+      .preview-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .625rem; text-align: center; color: var(--color-muted-text); }
+      .preview-empty svg { color: var(--color-primary); opacity: .4; }
+      .preview-empty p { line-height: 1.7; font-size: .875rem; }
+      .preview-empty p strong { display: block; margin-top: .375rem; color: var(--color-primary); font-weight: 700; }
+      .preview-text { flex: none; font-size: .9375rem; line-height: 1.9; color: var(--color-text); white-space: pre-wrap; word-break: break-word; }
+      .preview-text .pv-title { font-size: 1.1875rem; font-weight: 800; color: var(--color-primary-deep); margin-bottom: 1rem; }
+      .wc-select { flex: none; position: relative; }
+      .wc-select select { appearance: none; -webkit-appearance: none; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text); font: inherit; font-size: .8125rem; font-weight: 600; padding: .625rem 1.75rem .625rem .75rem; cursor: pointer; min-width: 5.25rem; }
+      .wc-select::after { content: '▾'; position: absolute; right: .625rem; top: 50%; transform: translateY(-50%); font-size: .75rem; color: var(--color-muted-text); pointer-events: none; }
+      .wc-select select:hover { border-color: var(--color-primary); }
+      .prompt-picker { position: relative; flex: none; }
+      .prompt-toggle { display: inline-flex; align-items: center; justify-content: center; gap: .25rem; padding: .5rem .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-primary-deep); font: inherit; font-size: .875rem; font-weight: 700; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+      .prompt-toggle:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
+      .prompt-toggle[aria-expanded="true"] { background: var(--color-primary-soft); border-color: var(--color-primary); }
+      .prompt-caret { font-size: .75rem; opacity: .8; transition: transform .2s ease; }
+      .prompt-toggle[aria-expanded="true"] .prompt-caret { transform: rotate(180deg); }
+      .prompt-panel { position: absolute; bottom: calc(100% + .5rem); left: 0; min-width: 20rem; max-width: 24rem; z-index: 40; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-pop); padding: .875rem; max-height: min(30rem, calc(100vh - 12rem)); overflow-y: auto; }
+      .prompt-panel .short-groups { max-height: none; }
+      .short-groups { display: flex; flex-direction: column; gap: .5rem; max-height: calc(100vh - 12rem); overflow-y: auto; padding-right: .25rem; }
+      .short-group { border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); overflow: hidden; transition: box-shadow .15s ease; }
+      .short-group:hover { box-shadow: var(--shadow-pop); }
+      .sg-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; width: 100%; padding: .75rem .875rem; background: transparent; border: 0; font: inherit; font-weight: 700; font-size: .875rem; color: var(--color-text); cursor: pointer; text-align: left; }
+      .sg-head:hover { background: var(--color-primary-soft); }
+      .sg-head[aria-expanded="true"] { background: var(--color-primary-soft); color: var(--color-primary-deep); }
+      .sg-count { font-size: .6875rem; color: var(--color-muted-text); font-weight: 600; flex: none; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 999px; padding: .125rem .5rem; }
+      .sg-body { display: none; border-top: 1px dashed var(--color-border); }
+      .sg-body.open { display: block; }
+      .sg-item { border-bottom: 1px solid var(--color-border); }
+      .sg-item:last-child { border-bottom: 0; }
+      .si-row { display: flex; align-items: center; gap: .375rem; width: 100%; padding: .5rem .875rem; background: transparent; border: 0; font: inherit; font-size: .8125rem; color: var(--color-text); cursor: pointer; text-align: left; }
+      .si-row:hover { color: var(--color-primary-deep); background: var(--color-primary-soft); }
+      .si-row.active { background: var(--color-primary-soft); color: var(--color-primary-deep); font-weight: 700; box-shadow: inset 3px 0 0 var(--color-primary); }
+      .si-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .si-copy { flex: none; font-size: .6875rem; padding: .125rem .5rem; border-radius: 999px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted-text); cursor: pointer; }
+      .si-copy:hover { color: var(--color-primary-deep); border-color: var(--color-primary); }
+      .chat-panel { display: flex; flex-direction: column; min-height: 74vh; background: var(--color-surface); border: 0; border-radius: 0; box-shadow: none; overflow: hidden; }
+      .chat-head { display: flex; align-items: center; gap: .75rem; padding: .875rem 0; border-bottom: 1px solid var(--color-border); flex-wrap: wrap; }
+      .mode-switch { display: inline-flex; gap: .375rem; background: var(--color-surface-soft); border-radius: 999px; padding: .25rem; }
+      .mode-switch button { border: 0; background: transparent; border-radius: 999px; padding: .4375rem 1rem; font: inherit; font-size: .8125rem; font-weight: 700; color: var(--color-muted-text); cursor: pointer; }
+      .mode-switch button[aria-pressed="true"] { background: var(--color-primary); color: #fff; }
+      .chat-prompt-tag { font-size: .8125rem; font-weight: 600; color: var(--color-primary-deep); background: var(--color-primary-soft); border-radius: 999px; padding: .3125rem .75rem; max-width: 18rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .chat-wc { font-size: .75rem; color: var(--color-muted-text); font-weight: 600; margin-left: auto; }
+      .chat-body { flex: 1; padding: 1.25rem 0 1rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; min-height: 380px; }
+      .chat-empty { margin: auto; text-align: center; color: var(--color-muted-text); max-width: 30rem; }
+      .chat-empty svg { color: var(--color-primary); opacity: .5; margin-bottom: .75rem; }
+      .chat-empty p { margin-bottom: 1.25rem; line-height: 1.7; }
+      .empty-quick { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; align-items: center; }
+      .empty-quick-label { font-size: .8125rem; color: var(--color-muted-text); }
+      .empty-quick-chip { border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-primary-deep); border-radius: 999px; padding: .4375rem .9375rem; font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; transition: background .15s ease, border-color .15s ease, box-shadow .15s ease; }
+      .empty-quick-chip:hover { background: var(--color-primary-soft); border-color: var(--color-primary); box-shadow: var(--shadow-pop); }
+      .message { display: flex; gap: .75rem; max-width: 100%; flex-direction: column; }
+      .message.user { align-items: flex-end; }
+      .message-row { display: flex; gap: .75rem; max-width: 100%; width: 100%; }
+      .message.user .message-row { flex-direction: row-reverse; }
+      .message-avatar { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-md); background: var(--color-surface-soft); color: var(--color-muted-text); font-size: .875rem; font-weight: 700; }
+      .message.user .message-avatar { background: var(--color-primary-soft); color: var(--color-primary); }
+      .message-bubble { background: var(--color-surface-soft); border-radius: var(--radius-lg); border-top-left-radius: var(--radius-sm); padding: .875rem 1.125rem; font-size: .9375rem; white-space: pre-wrap; line-height: 1.8; max-width: 100%; }
+      .message.user .message-bubble { background: var(--color-primary-soft); border-radius: var(--radius-lg); border-top-right-radius: var(--radius-sm); }
+      .message.loading .message-bubble::after { content: ""; display: inline-block; width: .5em; animation: typing-dots 1s steps(4, end) infinite; }
+      @keyframes typing-dots { 0% { content: ""; } 25% { content: "·"; } 50% { content: "··"; } 75% { content: "···"; } }
+      .message.msg-card .message-bubble { cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease; border: 1px solid transparent; }
+      .message.msg-card .message-bubble:hover { border-color: var(--color-primary); box-shadow: var(--shadow-pop); }
+      .ai-card { display: flex; flex-direction: column; gap: .375rem; }
+      .ai-card-title { font-size: 1rem; font-weight: 800; color: var(--color-primary-deep); }
+      .ai-card-summary { font-size: .84375rem; color: var(--color-muted-text); line-height: 1.6; }
+      .ai-card-tip { font-size: .75rem; font-weight: 700; color: var(--color-primary); }
+      .msg-actions { display: flex; gap: .5rem; flex-wrap: wrap; padding-left: 3rem; }
+      .msg-actions .btn { padding: .3125rem .75rem; font-size: .75rem; }
+      .share-card { align-self: center; width: 100%; max-width: 32rem; background: var(--color-primary-soft); border: 1px solid var(--color-primary); border-radius: var(--radius-lg); padding: .875rem 1rem; display: flex; flex-direction: column; gap: .5rem; }
+      .share-card-label { font-size: .8125rem; font-weight: 700; color: var(--color-primary-deep); }
+      .share-card-row { display: flex; gap: .5rem; align-items: center; }
+      .share-card-input { flex: 1; min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: .4375rem .625rem; font-size: .8125rem; background: var(--color-surface); color: var(--color-text); }
+      .share-card-row .btn { flex: none; padding: .4375rem .875rem; font-size: .8125rem; }
+      .chat-input-bar { display: flex; align-items: flex-end; gap: .625rem; padding: .875rem 0; border-top: 1px solid var(--color-border); background: transparent; }
+      .chat-input-bar .mode-switch { flex: none; align-self: flex-end; }
+      .chat-input-bar .mode-switch button { padding: .375rem .75rem; font-size: .8125rem; }
+      .chat-input-bar textarea { flex: 1; min-width: 0; resize: vertical; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: .625rem .75rem; min-height: 2.75rem; max-height: 10rem; font-size: .9375rem; background: var(--color-surface); }
+      .chat-input-bar textarea:focus { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 3px var(--color-primary-soft); }
+      @media (max-width: 1080px) { .split-layout { grid-template-columns: minmax(0, 1fr); } .preview-panel { min-height: 60vh; } }
+      @media (max-width: 860px) { .prompt-panel { min-width: 0; left: auto; right: 0; } .short-groups { max-height: 18rem; } .chat-input-bar { flex-wrap: wrap; } .chat-input-bar textarea { flex: 1 1 100%; order: 3; } .chat-input-bar .mode-switch { order: 2; } .chat-input-bar .wc-select { order: 2; } .chat-input-bar #send-btn { order: 3; margin-left: auto; } }
+    </style>
+  </head>
+  <body data-page-id="ai-short">
+    <a class="skip-link" href="#main-content">跳转到主要内容</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="日光写作首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+          </span>
+          日光写作
+        </a>
+        <nav class="main-nav" aria-label="主导航">
+          <a href="bookshelf.html">书架</a>
+          <a href="write.html">AI写作</a>
+          <a href="prompts.html">提示词库</a>
+          <a href="ai-short.html" aria-current="page">AI短篇</a>
+          <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+        </nav>
+        <div class="header-actions">
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">菜单</button>
+          <a class="btn btn-primary" href="write.html">立即开始创作</a>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
+        <a href="bookshelf.html">书架</a>
+        <a href="write.html">AI写作</a>
+        <a href="prompts.html">提示词库</a>
+        <a href="ai-short.html">AI短篇</a>
+        <a href="tools.html">创意工具箱</a>
+        <a href="settings.html">设置</a>
+        <a class="btn btn-primary btn-block" href="write.html">立即开始创作</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <section class="section" data-anchor-id="ai-short.workbench">
+        <div class="short-hero" style="max-width:76rem;margin:0 auto 1.5rem;padding:0 1.5rem;">
+          <span class="section-eyebrow">AI 短篇</span>
+          <h1 class="section-title">短篇创作对话</h1>
+          <p class="section-sub">点击「提示词」选择创作指令，在下方输入故事想法即可开写；生成的正文会以小卡片显示，点击卡片在右侧查看完整内容，底部可选择生成字数。</p>
+        </div>
+        <div class="workbench">
+          <div class="workbench-inner">
+            <div class="split-layout">
+              <div class="chat-col">
+                <div class="chat-panel">
+                  <div class="chat-head">
+                    <span class="chat-prompt-tag" id="chat-prompt-tag">未选择指令</span>
+                    <span class="chat-wc" id="chat-wc"></span>
+                    <span style="flex:1"></span>
+                    <button class="btn btn-ghost" type="button" id="share-link" style="padding:.375rem .875rem;font-size:.8125rem;">产出链接</button>
+                    <a class="btn btn-ghost" href="settings.html" style="padding:.375rem .875rem;font-size:.8125rem;">设置</a>
+                    <button class="btn btn-ghost" type="button" id="chat-clear" style="padding:.375rem .875rem;font-size:.8125rem;">清空</button>
+                  </div>
+                  <div class="chat-body" id="chat-body" data-state="default" aria-live="polite">
+                    <div class="chat-empty" id="chat-empty">
+                      <svg width="52" height="52" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                      <p>点击「提示词」选择一条创作指令，<br />然后在下方输入故事想法，点击「发送」开始创作。</p>
+                    </div>
+                  </div>
+                  <div class="chat-input-bar">
+                    <div class="prompt-picker" id="prompt-picker">
+                      <button type="button" class="prompt-toggle" id="prompt-toggle" aria-expanded="false" aria-controls="prompt-panel" title="选择提示词">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 2h2v5h4v2h-4v3h4v2h-4v8h-2v-8H7v-2h4V9H7V7h4z"/></svg>
+                        <span class="prompt-caret" aria-hidden="true">▾</span>
+                      </button>
+                      <div class="prompt-panel" id="prompt-panel" hidden>
+                        <div class="short-groups" id="short-groups"></div>
+                      </div>
+                    </div>
+                    <div class="mode-switch" role="group" aria-label="对话模式">
+                      <button type="button" id="mode-auto" aria-pressed="true">自动</button>
+                      <button type="button" id="mode-human" aria-pressed="false">人为</button>
+                    </div>
+                    <label class="wc-select" title="选择生成字数">
+                      <select id="wc-select">
+                        <option value="7000" selected>7000字</option>
+                        <option value="10000">1万字</option>
+                        <option value="15000">1.5万字</option>
+                        <option value="20000">2万字</option>
+                        <option value="0">2万以上</option>
+                      </select>
+                    </label>
+                    <label class="sr-only" for="chat-input">输入创作内容</label>
+                    <textarea id="chat-input" rows="2" placeholder="输入故事设定、情节、关键词，或选择提示词后发送……"></textarea>
+                    <button class="btn btn-primary" type="button" id="send-btn">发送</button>
+                  </div>
+                </div>
+              </div>
+              <div class="preview-col">
+                <div class="preview-panel">
+                  <div class="preview-head">
+                    <span class="preview-title" id="preview-title">正文预览</span>
+                    <span class="preview-wc" id="preview-wc"></span>
+                  </div>
+                  <div class="preview-body" id="preview-body">
+                    <div class="preview-empty" id="preview-empty">
+                      <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                      <p>点击左侧对话中的正文卡片，<br />即可在这里查看完整内容。<br /><strong>对话生成记录永久保存</strong></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </span>
+            日光写作
+          </div>
+          <p class="footer-desc">数十万创作者选择的 AI 写作工具，专为网络小说、剧本创作者打造。</p>
+        </div>
+        <nav class="footer-nav" aria-label="页脚导航">
+          <div>
+            <h3>产品</h3>
+            <a href="bookshelf.html">书架</a>
+            <a href="write.html">AI写作</a>
+            <a href="write.html">AI续写</a>
+            <a href="write.html">AI扩写润色</a>
+          </div>
+          <div>
+            <h3>资源</h3>
+            <a href="prompts.html">提示词库</a>
+            <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+            <a href="tools.html">大纲生成器</a>
+            <a href="tools.html">人设生成器</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-bottom">© 2026 日光写作 · 让灵感永不枯竭</div>
+    </footer>
+    <script>
+      (function () {
+        var toggle = document.querySelector('.menu-toggle');
+        var nav = document.getElementById('mobile-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', function () {
+            var open = nav.style.display === 'flex';
+            nav.style.display = open ? 'none' : 'flex';
+            toggle.setAttribute('aria-expanded', String(!open));
+          });
+        }
+
+        function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+
+        /* AI 短篇指令侧栏渲染 */
+        var shortGroups = document.getElementById('short-groups');
+        if (shortGroups && typeof AI_SHORT_PROMPTS !== 'undefined') {
+          var groups = [];
+          AI_SHORT_PROMPTS.forEach(function (p) {
+            var g = null;
+            groups.forEach(function (x) { if (x.name === p.group) { g = x; } });
+            if (!g) { g = { name: p.group, items: [] }; groups.push(g); }
+            g.items.push(p);
+          });
+          function fallbackCopy(text) {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            ta.remove();
+          }
+          var SHORT_OPEN = {
+            '一、创作方法论': ['故事的开端往往毫不起眼。当陆沉第三次在深夜的台灯下删掉写废的开头时，他并不知道，命运正把一扇门轻轻推开——门后藏着的那条路，将彻底改写他此后的人生。'],
+            '二、都市 · 现实题材': ['凌晨两点的江城，写字楼的灯还亮着几盏。林晚合上电脑，揉了揉发酸的眼睛，窗外的霓虹把她的影子拉得很长。手机屏幕亮起，是一条陌生号码发来的短信：「那笔钱，该还了。」'],
+            '三、幻想 · 设定流': ['星历二一四七年，人类终于踏上了那颗名为「归墟」的星球。探测队长顾北辰站在赤红色的荒原上，看着全息地图上那个不断跳动的信号点——那是一个本不该存在的生命反应。'],
+            '四、古言 · 悬疑': ['永宁十二年，长安城的雪下得比往年都大。大理寺少卿沈砚之接到一桩离奇命案——死者倒在自家书房，门窗紧锁，桌上却摆着一杯尚有余温的茶。'],
+            '五、女频情感': ['窗外的雨下了整整三天。温言站在画廊门口，看着那幅名为《初见》的画——画里的人眉眼带笑，像极了她记忆里那个夏天。三年了，她以为早已忘记，可心口那道旧伤，还是隐隐作痛。'],
+            '六、平台与投稿': ['编辑的退稿信只有一句话：「故事很好，但开头留不住读者。」沈乔把信折好收进抽屉，重新打开文档。这一次，她决定用一个真正能抓住人的开场，去叩开那扇久闭的门。']
+          };
+          var SHORT_BODY = [
+            '他沿着记忆里那条早已模糊的小路往前走，路边的梧桐换了三茬新叶。旧书店还在，招牌褪了色，门缝里漏出一线昏黄的灯光。推门进去的瞬间，风铃叮当一响，仿佛时光倒流回许多年前的那个下午。空气中弥漫着旧纸张与油墨的气味，书架最深处，一本没有封皮的手记静静躺在那里，等待着被重新翻开。',
+            '计划进行得比想象中顺利，又比想象中惊险。每一步都踩在刀尖上，稍有差池便是万劫不复。可事到如今，已经没有人能全身而退——棋局一旦开局，落子便再无回头路。他把手中那枚棋子轻轻放下，对面的人脸色骤然惨白。',
+            '深夜的房间里只剩键盘的敲击声。她把白天发生的一切在脑子里过了一遍又一遍，那些看似无关的细节，在灯下渐渐连成一条清晰的线。原来所有偶然，都是精心布置的必然。她深吸一口气，指尖落在发送键上。',
+            '消息像长了翅膀一样传开。有人欢喜，有人惶恐，更多的人在观望。茶馆里的议论声压得很低，却掩不住暗流汹涌——这座平静了太久的城，终于要变天了。街头的卖货郎改口叫卖起另一种东西，连巷口的野猫都似乎察觉到了什么，缩在屋檐下不肯出来。',
+            '他握紧拳头，指甲陷进掌心。不是没有犹豫过，只是有些路，一旦决定要走，就得咬着牙走到底。哪怕前方是深渊，他也要亲眼看看，深渊的尽头到底有什么。风从背后灌过来，吹得他衣袂猎猎作响，像一面不肯投降的旗。',
+            '街角的面馆还亮着灯，老板认得他，照例下了一碗加蛋的面。热气腾腾的面端上来，他忽然觉得鼻子有点酸。原来这世上，总还有一些东西，从未改变。他低头挑起一筷子面，雾气模糊了镜片，也模糊了视线。',
+            '真相远比想象中复杂。他翻遍所有的线索，发现每一个答案的背后都藏着新的问题，像俄罗斯套娃一样层层嵌套。而最深处那个秘密，竟与他最初寻找的东西截然相反。他瘫坐在椅子上，望着天花板，久久没有说话。',
+            '风从旷野深处吹来，卷起地上的落叶。他站在岔路口，面前是两条截然不同的路。选择向来很难，但更难的是，无论选哪一条，都要承担它带来的全部后果。他闭上眼睛，再睁开时，眼神已经变得像铁一样冷。',
+            '那枚玉佩在他掌心里微微发烫，仿佛有自己的心跳。他低头端详着上面那些繁复的花纹，忽然发现，每一条纹路都像是一个古老的文字。他试着用指腹去描摹，那些文字竟在他眼前缓缓亮了起来，发出淡蓝色的光。',
+            '她推开那扇沉重的木门时，并没有做好面对一切的准备。可门后的景象，还是让她瞬间僵在原地——房间中央放着一口黑色的棺椁，棺盖上刻满了她不认识的符文，而棺椁的旁边，摆着一双她再熟悉不过的绣鞋。',
+            '暴雨倾盆而下，把整座城市浇得透亮。他站在天台上，看着脚下川流不息的车灯，像一条流淌的金河。手机在口袋里震了一下，他掏出来看，是那个人发来的最后一条消息：「对不起，我骗了你。」他把手机塞回口袋，纵身跃入雨幕之中。',
+            '会议室里的空气仿佛凝固了。所有人都在等他开口，可他知道，一旦说出那个名字，在场的人里，至少有一个会当场翻脸。他端起面前的茶，慢慢喝了一口，才缓缓说：「这件事，要从三十年前说起。」',
+            '列车在夜色中疾驰，窗外的灯火一盏盏后退。她靠在座椅上，闭着眼睛假寐，其实脑子里全是白天那通电话。那个声音她一辈子都忘不掉——低沉、平稳，却藏着一丝不易察觉的颤抖。他说：「回来吧，我们都老了。」',
+            '他第一次走进那间实验室的时候，被眼前的景象震住了。巨大的玻璃培养槽里，漂浮着一个和他长得一模一样的人。那个人闭着眼睛，胸口微微起伏，像是在沉睡。而培养槽下方的铭牌上，写着一串编号：Subject-001。',
+            '山雨欲来，风从旷野深处卷起。少年攥紧手中的信物，望着前方雾气弥漫的城门，他知道，踏出这一步，就再也没有回头的路了。身后是生养他的小镇，前方是未知江湖，而他口袋里只剩半块干粮和三枚铜钱。',
+            '她把那封信烧了。火苗舔过纸面的瞬间，她闻到一股淡淡的墨香——那是他惯用的松烟墨。灰烬落在青石板上，被风一吹，散得干干净净。她蹲下身，把最后一粒灰撮起来，放进随身的香囊里。',
+            '午夜十二点的钟声敲响时，整栋楼的人都听到了那声尖叫。保安第一个冲上楼，却发现那间屋子的门从里面反锁着。透过猫眼看进去，房间里空无一人，只有桌上的日记本摊开着，最后一页用红笔写着一句话：「他来了。」',
+            '她站在镜子前，慢慢解开头发。镜子里的人明明是她，却又不是她——那双眼睛太冷，冷得像一潭死水，而她记得自己昨天还笑过。她伸手去摸镜面，指尖触到的瞬间，镜子里的人忽然笑了。',
+            '码头上的雾气浓得化不开。他摸黑上了那艘船，没有跟任何人打招呼。船老大点了一杆烟，火光明灭间，他看清了那张脸——那是一张他在通缉令上见过无数次的脸。烟头烫到了手指，船老大手一抖，烟掉进了江里。',
+            '颁奖典礼的灯光刺得他睁不开眼。主持人念出那个名字的时候，全场安静了一秒，随后爆发出雷鸣般的掌声。他站起身，理了理西装，一步步走上台。聚光灯打在他脸上，他看到第一排那个位置空着——她终究还是没有来。',
+            '他在沙漠里走了三天三夜，水壶早就空了。嘴唇裂开一道口子，每说一个字都有血腥味。可就在他快要倒下的时候，地平线上出现了一片绿洲。他跌跌撞撞地跑过去，却发现那片绿洲中央，立着一块石碑，碑上刻着他自己的名字。',
+            '医院的走廊很长，白炽灯把一切都照得惨白。她坐在长椅上，双手紧紧攥着那张检查报告。医生刚才说的话还在耳边回响：「情况不太乐观，你们要有心理准备。」她深吸一口气，站起来，推开了那扇病房的门。',
+            '他第一次杀人是在十六岁。那把刀很短，捅进去的时候几乎没有阻力。他记得那个人倒下去时的眼神，不是恐惧，而是解脱。很多年后他才知道，那个人是他的亲生父亲。',
+            '拍卖行里的举牌声此起彼伏，价格一路飙升到所有人都倒吸一口凉气的数字。她坐在最后一排，没有举牌，只是静静地看着台上那幅画。画的右下角有一个极小的签名，那是她母亲的名字——一个已经死了二十年的人的名字。',
+            '火车到站的时候，天刚蒙蒙亮。他拖着行李箱走出车站，深吸了一口故乡的空气。二十年没回来了，街道变了，楼也高了，可街角那家豆浆铺还在，老板还是那个胖乎乎的中年人。他坐下要了一碗豆浆，老板看了他半天，忽然说：「你是老李家那小子吧？」',
+            '实验室的警报忽然响了起来，红色的警示灯把整个房间染成血色。他盯着屏幕上飞速跳动的数据，脸色越来越难看。那个本应在控制之下的实验体，不知什么时候突破了封锁，正在向地表移动。他抓起对讲机大喊：「所有人，立刻撤离！」',
+            '她站在婚礼的现场，看着那个穿着白纱走向新郎的女孩。女孩的脸上带着幸福的微笑，可她分明看到，女孩的手在微微发抖。她想起三年前那个雨夜，女孩也是这样站在他面前，说：「我不能再骗自己了。」',
+            '地下室的空气潮湿而阴冷。他打开手电筒，光束扫过墙壁上那些密密麻麻的符号。这些符号他研究了十年，却始终无法破解。可就在这时，他注意到其中一个符号的形状，与他小时候在梦里反复看到的那个图案，一模一样。',
+            '飞机在云层之上平稳飞行。他靠在舷窗边，看着下面绵延的雪山。这次出差本来只是例行公事，可临行前老板塞给他的那个U盘，却让他隐隐觉得不对劲。U盘里只有一份文件，文件名是：「你知道的太多了。」',
+            '她把日记本合上的时候，手还在抖。日记里的内容让她整个世界都崩塌了——那个她叫了二十年「爸爸」的人，竟然是杀害她亲生父母的凶手。她把日记本塞进背包，站起来，推门走进了夜色里。',
+            '码头上的集装箱像一座座钢铁坟墓。他蹲在阴影里，听着远处的脚步声越来越近。三个人，脚步声一轻两重，其中一个拖着一条腿——那是老刘，他的线人。老刘昨天说有一笔大买卖，现在看来，这笔买卖的代价是他的命。',
+            '图书馆的闭馆音乐响起来的时候，她才意识到已经坐了整整一个下午。她伸了个懒腰，收拾桌上的书本，却发现对面座位上多了一张纸条。纸条上只有一行字：「你也在找那本书吗？明天下午三点，老地方见。」',
+            '他把枪放在桌上的时候，对面的男人笑了。男人说：「你以为拿把枪就能改变什么？」他说：「不能。但至少能让你知道，有些事，我敢做。」他扣动扳机的时候，手没有抖——从他决定走这条路的那天起，他的手就再也没抖过。',
+            '清晨的菜市场人声鼎沸。她挤在人群里挑着西红柿，忽然听到有人叫她的小名。她回头，看到一个头发花白的老太太，手里拎着菜篮，正笑眯眯地看着她。她愣了半天，才认出那是她二十年没见过的奶奶。',
+            '他站在悬崖边上，风把外套吹得猎猎作响。下面是万丈深渊，上面是乌云压顶。他闭上眼睛，想起小时候父亲跟他说的一句话：「儿子，人这一辈子，总得跳一次崖。跳过去了，你就长大了。」他深吸一口气，纵身跃下。',
+            '手术室的灯灭了。她冲上去抓住医生的袖子，声音都在发抖：「怎么样？」医生摘下口罩，脸上的表情让她心里一沉。医生说：「手术很成功，但后面的路，得靠她自己走了。」她松开手，慢慢滑坐在地上，捂住脸，哭了。',
+            '他在火车站的候车室里坐了一整夜。周围的人换了一拨又一拨，只有他一直没动。天快亮的时候，他终于站起来，走到检票口。工作人员看了他的票，说：「这趟车取消一年了。」他点点头，转身走了出去。其实他早就知道。',
+            '她把钥匙插进锁孔的时候，手是抖的。这门她三年没进过了。门开了，屋里的陈设跟她离开时一模一样，甚至连桌上的茶杯都还在原来的位置。她走到窗前，拉开窗帘，阳光照进来的瞬间，她看到玻璃上有一行用口红写的字：「我一直在等你。」',
+            '审讯室的灯很亮，照得人睁不开眼。他坐在椅子上，双手铐在扶手上，对面是两个表情严肃的警察。其中一个把一沓照片推到他面前，说：「认识这些人吗？」他扫了一眼，笑了：「认识。都是被我杀的人。」',
+            '她站在舞台上，灯光打在她身上，台下一片漆黑。她深吸一口气，开始唱那首她练了无数遍的歌。唱到副歌的时候，她看到第一排有一个熟悉的身影——是那个她说再也不会见的人。她的声音顿了一拍，然后继续唱下去，眼泪却掉了下来。',
+            '沙漠里的夜晚冷得刺骨。他裹紧毯子，看着头顶的星空。这片星空跟城市里的不一样，星星又大又亮，像是要掉下来似的。他想起小时候奶奶说，每颗星星都是一个死去的灵魂。他盯着最亮的那颗，心里想：那是爷爷吗？',
+            '他把最后一块拼图按下去的时候，整幅画终于完整了。画上是一座他从未去过却无比熟悉的城市，街道、建筑、甚至街角那家咖啡馆，都跟他梦里的一模一样。画的背面有一行小字：「欢迎来到真实世界。」',
+            '医院的长廊里弥漫着消毒水的味道。她抱着孩子，坐在椅子上等叫号。孩子烧得小脸通红，却还冲她笑。她低头亲了亲孩子的额头，心里暗暗发誓：不管花多少钱，不管找多少医生，一定要把孩子治好。',
+            '他推开酒吧的门，震耳欲聋的音乐瞬间把他包围。他在人群里扫了一眼，很快锁定了目标——那个穿着红裙子的女人，正坐在吧台边喝着什么。他走过去，在她旁边的位置坐下，说：「等很久了吧？」女人转过头，冲他笑了笑：「你迟到了三年。」',
+            '火车穿过隧道的时候，车厢里忽然暗了下来。她借着这个瞬间的黑暗，快速把那张纸条塞进座位缝隙里。灯重新亮起来的时候，她已经恢复了平静的表情。对面的人问她：「刚才怎么了？」她说：「没什么，只是有点累。」',
+            '他站在自家门口，钥匙插在锁孔里，却迟迟没有转动。门里面传来妻子的笑声和孩子的叫喊声，那是他每天最渴望听到的声音。可今天，他不想进去——因为他知道，一旦推开门，他就必须假装自己还是那个好丈夫、好父亲。',
+            '法庭上的气氛紧张到了极点。检察官做完了最后的陈述，目光如炬地盯着被告席上的她。她平静地站起来，整理了一下衣服，说：「我没有杀人。但我确实有罪——我罪在相信了一个不该相信的人。」全场哗然。',
+            '她把行李箱拖出家门的时候，天还没亮。街道上空无一人，只有路灯投下昏黄的光。她没有回头，因为她知道，一旦回头，她就走不了了。出租车在路口等她，司机问她：「去哪儿？」她说：「随便，越远越好。」',
+            '他在海边坐了一整天，看着潮起潮落。手机里躺着十七条未读消息，都是同一个人发的。他没有点开，只是把手机调成静音，扔进沙子里。海浪涌上来，把手机卷走了。他忽然觉得轻松了许多。',
+            '颁奖典礼结束后，记者围上来问她：「拿到这个奖，最想感谢谁？」她想了想，说：「最想感谢那个当年说我永远不可能成功的人。因为他让我知道，证明给别人看，是一件多么痛快的事。」全场沉默了一秒，然后爆发出热烈的掌声。',
+            '他把刀从伤口里拔出来的时候，血喷了一手。他咬着牙，用布条把伤口草草包扎了一下，然后继续往前走。身后传来追兵的脚步声，越来越近。他拐进一条小巷，翻过一堵墙，落在了一个陌生的院子里。院子里站着一个老人，看着他，说：「你终于来了。」',
+            '她站在橱窗前，看着里面那条白色的婚纱。婚纱的款式是她十年前就想要的，可现在，她已经不打算结婚了。她摸了摸自己的小腹，那里有一个正在长大的小生命。她转身走进店里，对店员说：「请把那条婚纱包起来，我要买给我女儿。」',
+            '暴雨中的高速公路一辆车都没有。他握着方向盘，雨刷疯狂地摆动，可还是看不清前方的路。收音机里正在播报紧急新闻：「台风即将登陆，请所有市民留在家中……」他关掉收音机，踩下油门。有些见面，是不能等的。',
+            '他在机场的到达大厅等了一个小时。出口处的人流一波一波地出来，却始终没有看到那个熟悉的身影。他掏出手机拨那个号码，听到的却是：「您拨打的号码是空号。」他站在原地，看着手里的机票，忽然笑了。原来从头到尾，都是他一个人在演这场戏。',
+            '她把那枚戒指扔进河里的时候，没有哭。戒指在水面上溅起一朵小小的水花，然后沉了下去。她转身离开，步伐比来的时候轻快了许多。走到桥的另一头，她深吸一口气，掏出手机，拨了一个号码：「妈，我回来了。」',
+            '深夜的便利店亮着惨白的灯。他站在货架前挑泡面，身后传来脚步声。他回头，看到一个穿着校服的女孩，正怯生生地看着他。女孩说：「叔叔，你能借我十块钱吗？我迷路了。」他看了看女孩，从钱包里抽出两张百元钞票递过去：「打车回家吧。」',
+            '他推开病房的门时，父亲已经睡着了。呼吸机发出规律的嘀嗒声，像某种倒计时。他在床边坐下，握住父亲那只布满老年斑的手。父亲忽然睁开眼睛，看着他，说了一句他这辈子都忘不了的话：「儿子，爸这辈子最后悔的事，就是没多陪你。」',
+            '她站在山顶，看着远处的城市在晨雾中慢慢苏醒。风把她的头发吹得凌乱，她却觉得前所未有的自由。她拿出手机，拍了一张照片，发了一条朋友圈：「新的开始。」发完之后，她把手机关机，塞进背包，沿着另一条路下了山。',
+            '他把最后一份文件签好字，交给对面的律师。律师看了看，说：「签了这份协议，你就什么都没有了。」他说：「我知道。但有些东西，比钱重要。」律师叹了口气，把文件收好：「祝你以后好运。」他站起来，走出那栋大楼，阳光照在脸上，他眯起了眼睛。',
+            '她在车站的长椅上坐了很久，久到保洁阿姨过来问她是不是需要帮助。她摇摇头，说：「我在等人。」阿姨看了看空荡荡的候车室，没再说话。天快黑的时候，她终于站起来，拖着行李箱走向检票口。其实她早就知道，那个人不会来了。',
+            '他站在讲台上，看着下面那些年轻的面孔。这些面孔跟他三十年前刚站上讲台时看到的，一模一样——充满期待，又带着一丝不安。他清了清嗓子，开始说第一句话：「同学们，今天我们要讲的，是一个关于选择的故事。」',
+            '雨天的咖啡馆总是格外安静。她坐在靠窗的位置，看着玻璃上滑落的水珠，一杯美式已经凉透了。对面的空座位上放着一本翻开的书，书页被风吹得哗哗响。她伸手去按，指尖触到书页的瞬间，一张照片掉了出来——照片上的人，是她找了十年的那个人。',
+            '他把那张泛黄的照片塞进钱包最里层，拉上拉链，深吸一口气，推开了那扇尘封已久的门。门后的世界跟他记忆中完全不同——曾经熟悉的客厅被改造成了一个小型画室，墙上挂满了他不认识的画作。画室中央站着一个背对着他的女人，听到脚步声，女人缓缓转过身。',
+            '深夜的高速公路像一条黑色的缎带，延伸向看不见的远方。他独自开着车，收音机里放着一首老歌，歌词他早就记不清了，旋律却熟悉得让人鼻子发酸。副驾驶座上放着一个牛皮纸袋，里面装着他今天刚拿到的离婚协议书。签完字的那一刻，他忽然觉得轻松了。',
+            '医院的走廊很长，长得像一条没有尽头的隧道。她抱着刚做完手术的女儿，一步一步往前走。女儿在她怀里睡着了，小脸苍白，呼吸微弱。她低头看着女儿，心里默默念着：「宝贝，妈妈在这里，妈妈哪里也不去。」走到病房门口，她停下脚步，深吸一口气，才轻轻推开门。',
+            '他第一次走进那个村子的时候，天已经快黑了。村口有一棵老槐树，树下坐着一个老太太，正在纳鞋底。他问路，老太太抬头看了他一眼，说：「你找谁？」他说了一个名字，老太太的脸色变了：「那个人，已经死了十年了。」',
+            '颁奖典礼的后台，她对着镜子补妆。镜子里的人妆容精致，笑容得体，可她知道，那双眼睛是空的。主持人喊她的名字，她站起来，理了理裙摆，一步步走向舞台。聚光灯打在她身上，台下掌声雷动，可她心里只有一个念头：如果她在，该多好。',
+            '他把那封信烧了。火苗舔过纸面的瞬间，他闻到一股淡淡的墨水味——那是她惯用的蓝黑墨水。灰烬落在烟灰缸里，他盯着看了很久，直到最后一丝火星熄灭。他站起来，走到窗前，看着外面的城市灯火，忽然觉得，有些东西烧掉了，反而轻松了。',
+            '地铁里挤满了人，她被人群裹挟着往前挪。忽然有人轻轻碰了一下她的肩膀，她回头，看到一个戴帽子的男人，正冲她微笑。那个笑容她太熟悉了——熟悉到让她瞬间红了眼眶。她张嘴想说话，可地铁到站了，门开了，男人被人群冲走，消失在人海里。',
+            '他站在天台上，看着远处的夕阳一点点沉入地平线。风很大，吹得他几乎站不稳。手机在口袋里震了一下，他掏出来看，是一条陌生号码发来的短信：「你爸走了。」他盯着那行字看了很久，然后把手机放回口袋，继续看着夕阳。眼泪流下来的时候，他自己都没发觉。',
+            '书店最深处的那个角落，是她每次来必去的地方。那里有一张旧沙发，沙发扶手上刻着一个小小的「L」字。她坐下来，从包里拿出一本书，翻到夹着书签的那一页。书页边缘已经泛黄，那是她十年前留下的痕迹。她抚摸着那个「L」字，嘴角微微上扬。',
+            '他把最后一箱东西搬上车的时候，天已经黑了。新租的房子在城市的另一端，离公司要坐一个半小时的地铁。可他已经不在乎了——只要能离开那个地方，多远都行。他坐进驾驶室，发动引擎，看着后视镜里越来越远的旧居，长长地舒了一口气。',
+            '她在海边捡了一整天的贝壳。夕阳把海面染成金色，浪花一波一波地涌上来，又退下去。她把捡到的贝壳一个个摆成一行，像小时候那样。手机响了，是妈妈打来的。她接起来，妈妈说：「回来吧，我们都想你了。」她看着手里的贝壳，轻声说：「妈，我再待一天。」',
+            '他推开办公室的门，里面空无一人。桌上的文件整整齐齐，电脑屏幕还亮着，椅子被拉出来，像是有人刚离开。他走到自己的工位，发现抽屉被打开过，里面的东西被动过。他蹲下身，从抽屉最深处摸出一个信封，信封上写着他的名字，字迹他很熟悉——那是他失踪了三年的搭档的笔迹。',
+            '深夜的急诊室人满为患。她抱着发烧的孩子，在走廊里等了两个多小时。孩子在她怀里昏昏沉沉，小脸烫得吓人。她一遍遍跟护士说要见医生，护士总是说：「再等等，前面还有很多人。」她急得快哭了，这时一个穿着白大褂的医生走过来，看了看孩子，说：「跟我来。」'
+          ];
+          var SHORT_TURN = [
+            '变故发生在所有人都以为大局已定的时候。一声闷响，灯光骤灭，黑暗里有人倒下的声音。等灯重新亮起，桌上那件关键的信物已经消失不见，而每个人脸上的表情，都变得意味深长。',
+            '直到那一刻他才惊觉，自己以为的掌控全局，不过是局中人的一厢情愿。真正操盘的人一直站在暗处，微笑看着所有人按他写好的剧本前行。而此刻，剧本翻到了最后一页。',
+            '然而，命运最擅长的就是开玩笑。就在他准备收手的那一刻，一个久违的名字忽然出现在眼前。所有的计划都要推翻重来，因为他发现，这场局里还藏着一个他从未算到的人。',
+            '转折来得猝不及防。原本十拿九稳的结局忽然失控，所有线索在同一时间指向同一个方向——那个他最不愿意怀疑的人。证据摆在眼前，由不得他不信，也由不得他不动摇。',
+            '就在所有人以为故事即将落幕的时候，一个意想不到的声音从幕后响起。那个声音很轻，却像一把刀，精准地切开了所有伪装。他看着说话的人，缓缓说了一句：「原来是你。」',
+            '时间仿佛在这一刻凝固。他低头看着手里那张照片，照片上的人笑得很灿烂，可他知道，这张照片拍完的第二天，那个人就失踪了。而失踪的原因，与他有直接关系。',
+            '所有的线索在这一刻汇聚成一条清晰的线。他终于明白了——从一开始，他就被人当作了棋子。而下棋的人，正是那个他最信任的人。他闭上眼睛，再睁开时，眼神已经变了。',
+            '当真相被揭开的时候，没有人说话。房间里静得能听到呼吸声。他看着面前这个人，这个人也看着他。过了很久，他终于开口：「为什么？」那个人笑了笑，说：「因为你跟我当年一模一样。」'
+          ];
+          var SHORT_END = [
+            '多年以后，当他再想起那个夜晚，已经记不清当时的风有多大，只记得那道决定性的光，和光里那个从未后悔的决定。故事到这里本该结束，但所有人都知道，真正的传奇，才刚刚开始。',
+            '天光微亮，新的一天从地平线上升起。他收起那份写满秘密的卷宗，推开窗，深深吸了一口清晨的空气。有些答案或许永远不会被公开，但至少，他心里已经有了方向。',
+            '她把那枚旧信物放回盒底，轻轻合上。窗外雨停，一道彩虹横跨天际。有些故事不需要结局，因为最好的结局，往往藏在没说出口的那句话里。',
+            '人群散去，灯火阑珊。他最后看了一眼那个地方，转身走进夜色。身后的一切都已成为往事，而前方，是无限的可能。他知道，无论走多远，故事都不会真正结束。',
+            '他站在当年出发的地方，看着同样的风景。只是这一次，他不再是那个懵懂的少年。风还是那阵风，路还是那条路，可走在这条路上的人，已经完全不同了。他迈开步子，向着远方走去。',
+            '最后一页日记写完的时候，天已经黑了。她合上本子，把它放进抽屉最深处。有些故事，写给自己看就够了。她站起来，走到窗前，看着外面的万家灯火，嘴角微微上扬。明天，又是新的一天。'
+          ];
+          function pickArr(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+          function genShort(group, name) {
+            var lines = [];
+            lines.push('《' + name + '》');
+            lines.push('');
+            var chapters = ['第一章 风起', '第二章 波谲', '第三章 惊变', '第四章 长明'];
+            var pool = SHORT_BODY.slice();
+            var pick = function () {
+              if (!pool.length) pool = SHORT_BODY.slice();
+              var idx = Math.floor(Math.random() * pool.length);
+              return pool.splice(idx, 1)[0];
+            };
+            for (var c = 0; c < 4; c++) {
+              lines.push(chapters[c]);
+              lines.push('');
+              if (c === 0) {
+                lines.push(pickArr(SHORT_OPEN[group] || SHORT_OPEN['一、创作方法论']));
+              }
+              for (var i = 0; i < 19; i++) lines.push(pick());
+              if (c < 3) lines.push(pickArr(SHORT_TURN));
+            }
+            lines.push('');
+            lines.push('尾声');
+            lines.push('');
+            lines.push(pickArr(SHORT_END));
+            lines.push('');
+            lines.push('（以上为演示模式生成，接入真实大模型后可按指令完整产出并支持多轮追问）');
+            return lines.join('\n\n');
+          }
+          /* 对话框式 AI 短篇：左选提示词 + 模式切换 + 右侧对话框 */
+          var STORAGE_KEY = 'rgyw_ai_config';
+          var DEFAULT_CONFIG = {
+            apiBase: 'https://open.bigmodel.cn/api/paas/v4',
+            apiKey: 'YOUR_API_KEY',
+            model: 'glm-4-flash',
+            maxTokens: '4096'
+          };
+          function getAiConfig() {
+            try { var raw = localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch (e) {}
+            return DEFAULT_CONFIG;
+          }
+          /* 字数统计见 updateChatWc */
+          async function callChatApi(config, messages, onChunk, onDone, onErr) {
+            try {
+              var url = config.apiBase.replace(/\/+$/, '') + '/chat/completions';
+              var resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + config.apiKey },
+                body: JSON.stringify({
+                  model: config.model,
+                  messages: messages,
+                  max_tokens: parseInt(config.maxTokens) || 4096,
+                  stream: true
+                })
+              });
+              if (!resp.ok) {
+                var errText = await resp.text();
+                onErr('请求失败（HTTP ' + resp.status + '）：' + errText.slice(0, 200));
+                return;
+              }
+              var reader = resp.body.getReader();
+              var decoder = new TextDecoder();
+              var buffer = '';
+              var fullText = '';
+              while (true) {
+                var _r = await reader.read();
+                var done = _r.done;
+                var value = _r.value;
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                var lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+                for (var i = 0; i < lines.length; i++) {
+                  var line = lines[i].trim();
+                  if (!line || !line.startsWith('data:')) continue;
+                  var data = line.slice(5).trim();
+                  if (data === '[DONE]') { onDone(fullText); return; }
+                  try {
+                    var json = JSON.parse(data);
+                    var delta = json.choices && json.choices[0] && json.choices[0].delta && json.choices[0].delta.content;
+                    if (delta) { fullText += delta; onChunk(fullText); }
+                  } catch (e) {}
+                }
+              }
+              onDone(fullText);
+            } catch (e) {
+              onErr('网络错误：' + e.message);
+            }
+          }
+          /* ===== 长文分段续写：目标字数大时自动多轮生成并拼接 ===== */
+          function getTargetChars() {
+            var sel = document.getElementById('wc-select');
+            var v = sel ? parseInt(sel.value, 10) : 7000;
+            return v || 0;
+          }
+          function countChars(text) {
+            return String(text || '').replace(/\s/g, '').length;
+          }
+          /* 单章字数兜底：超过 3000 字按段落边界截断到接近目标（约2500字） */
+          function trimToChapter(text) {
+            var t = String(text || '');
+            if (countChars(t) <= 3000) return t;
+            var paras = t.split(/\n{2,}/);
+            var out = '';
+            for (var i = 0; i < paras.length; i++) {
+              var next = out ? out + '\n\n' + paras[i] : paras[i];
+              if (countChars(next) > 3000) break;
+              out = next;
+            }
+            if (!out) {
+              var base = t.slice(0, 3000);
+              var idx = base.lastIndexOf('。');
+              if (idx > 1500) return t.slice(0, idx + 1);
+              var idx2 = t.slice(0, 4500).lastIndexOf('。');
+              if (idx2 > 0) return t.slice(0, idx2 + 1);
+              return t.slice(0, 2500);
+            }
+            return out;
+          }
+          /* 收尾段长度限制 */
+          function trimTail(text, cap) {
+            var t = String(text || '');
+            if (countChars(t) <= cap) return t;
+            var base = t.slice(0, cap);
+            var idx = base.lastIndexOf('。');
+            if (idx > cap * 0.5) return t.slice(0, idx + 1);
+            return base;
+          }
+          /* 防回声：收尾段若过半句子与前文重复，判定为复读并丢弃 */
+          function tooEcho(seg, full) {
+            var sents = String(seg).split(/[。！？!?…]/).filter(function (s) { return s.replace(/\s/g, '').length >= 5; });
+            if (!sents.length) return false;
+            var dup = 0;
+            for (var i = 0; i < sents.length; i++) {
+              var s = sents[i].replace(/\s/g, '');
+              if (s && full.indexOf(s) >= 0) dup++;
+            }
+            return dup / sents.length > 0.5;
+          }
+          async function generateLongStory(config, userText, onProgress) {
+            var target = getTargetChars();
+            var baseMsgs = buildMessages(userText);
+            var full = '';
+            var guard = 0;
+            var chapter = 1;
+            var MAX_ROUNDS = 24;
+            var finished = false;
+            while (guard < MAX_ROUNDS && !finished) {
+              var msgs;
+              if (!full) {
+                msgs = baseMsgs;
+              } else {
+                chapter++;
+                msgs = [
+                  { role: 'system', content: '你是一位专业的小说创作助手。下面是一篇已写好的小说前半部分，请严格延续同一故事、同一人物与同一标题风格，紧接上文继续推进情节。现在请写第' + chapter + '章：以「第' + chapter + '章」开头（可带简短章名），本章正文约2300-2700字，写满本章后立即停止，不要继续写下一章。要求：必须推进全新的情节发展，不得复述或改写前文已经写过的场景、对话和句子，不要总结前文，不要输出全书标题，不要使用「起：」「承：」「转：」「合：」等大纲标记；以连续叙事段落书写，句子完整，段落自然收束。' },
+                  { role: 'user', content: '【已写部分】\n' + full + '\n\n请写第' + chapter + '章（全新情节，不要重复前文），约2500字，写完即止。' }
+                ];
+              }
+              var seg = await new Promise(function (resolve, reject) {
+                callChatApi(config, msgs, function () {}, function (text) { resolve(text); }, function (err) { reject(new Error(err)); });
+              });
+              if (!seg) { finished = true; break; }
+              var segClean = seg;
+              var fullTitle = splitTitleBody(full).title;
+              if (!full) {
+                /* 首轮：保留全书标题行，正文按章截断 */
+                var parts0 = splitTitleBody(seg);
+                var bodyTrim = trimToChapter(parts0.body);
+                segClean = parts0.title ? (parts0.title + '\n\n' + bodyTrim) : bodyTrim;
+              } else {
+                /* 避免续写段重复首行标题 */
+                if (fullTitle && segClean.indexOf(fullTitle) === 0) {
+                  segClean = segClean.slice(fullTitle.length).replace(/^\s*[\n:：]+\s*/, '');
+                }
+                segClean = trimToChapter(segClean);
+                /* 防回声：续写段复读前文则重试一次全新情节 */
+                if (tooEcho(segClean, full)) {
+                  var retryMsg = [
+                    { role: 'system', content: '你是一位专业的小说创作助手。下面是一篇已写好的小说前半部分。你刚才写的内容与前文大量重复，请完全跳过已经写过的场景、对话和情节，构思全新的情节发展，让故事向前推进。现在请写第' + chapter + '章：以「第' + chapter + '章」开头（可带简短章名），本章正文约2300-2700字，写完即止。禁止复述前文任何句子。' },
+                    { role: 'user', content: '【已写部分】\n' + full + '\n\n请写第' + chapter + '章（全新情节，不要重复前文），约2500字，写完即止。' }
+                  ];
+                  var retrySeg = await new Promise(function (resolve, reject) {
+                    callChatApi(config, retryMsg, function () {}, function (text) { resolve(text); }, function (err) { reject(new Error(err)); });
+                  });
+                  if (retrySeg) {
+                    var retryClean = retrySeg;
+                    if (fullTitle && retryClean.indexOf(fullTitle) === 0) {
+                      retryClean = retryClean.slice(fullTitle.length).replace(/^\s*[\n:：]+\s*/, '');
+                    }
+                    retryClean = trimToChapter(retryClean);
+                    segClean = (!tooEcho(retryClean, full)) ? retryClean : '';
+                  } else {
+                    segClean = '';
+                  }
+                }
+                /* 下界兜底：单章过短（<1000字）且还有余量时，扩写重试一次 */
+                if (segClean && countChars(segClean) < 1000 && guard + 2 < MAX_ROUNDS) {
+                  var expandMsg = [
+                    { role: 'system', content: '你是一位专业的小说创作助手。下面是一篇已写好的小说前半部分。你刚才写的第' + chapter + '章内容太短，请在同一章内继续扩写，补充细节描写、对话和情节推进，使本章总字数达到约2500字。不要跳到下一章，不要复述前文其他章节内容，不要使用大纲标记。' },
+                    { role: 'user', content: '【已写部分】\n' + full + '\n\n请扩写第' + chapter + '章（衔接上一段的结尾继续写），使本章达到约2500字。' }
+                  ];
+                  var expandSeg = await new Promise(function (resolve, reject) {
+                    callChatApi(config, expandMsg, function () {}, function (text) { resolve(text); }, function (err) { reject(new Error(err)); });
+                  });
+                  if (expandSeg && countChars(expandSeg) > countChars(segClean)) {
+                    var expClean = expandSeg;
+                    if (fullTitle && expClean.indexOf(fullTitle) === 0) {
+                      expClean = expClean.slice(fullTitle.length).replace(/^\s*[\n:：]+\s*/, '');
+                    }
+                    expClean = trimToChapter(expClean);
+                    if (!tooEcho(expClean, full)) {
+                      segClean = segClean + '\n\n' + expClean;
+                    }
+                  }
+                }
+              }
+              if (!segClean) { finished = true; break; }
+              full += (full ? '\n\n' : '') + segClean;
+              guard++;
+              var total = countChars(full);
+              if (onProgress) onProgress(full, total, target);
+              if (target > 0 && total >= target) finished = true;
+              if (seg.length < 120) finished = true;
+            }
+            /* 循环结束后：若结尾未自然收束，尝试一轮简短收尾（带防回声兜底） */
+            if (full && guard < MAX_ROUNDS) {
+              var tailCheck = full.replace(/\s/g, '');
+              if (!/[。！？!?…""」』]$/.test(tailCheck)) {
+                var tailMsg = [
+                  { role: 'system', content: '你是一位专业的小说创作助手。请为下面这篇已写好的小说写一个简短自然的收尾段落（200-400字），为整个故事画上句号。要求：直接续写新的收尾内容，不要重复或复述前文任何场景、对话或句子，不要使用大纲标记，以句号结尾。' },
+                  { role: 'user', content: '【已写部分】\n' + full + '\n\n请写一个200-400字的简短收尾。' }
+                ];
+                var tailSeg = await new Promise(function (resolve, reject) {
+                  callChatApi(config, tailMsg, function () {}, function (text) { resolve(text); }, function (err) { reject(new Error(err)); });
+                });
+                if (tailSeg) {
+                  var tailClean = trimTail(tailSeg, 600);
+                  if (!tooEcho(tailClean, full)) {
+                    full += '\n\n' + tailClean;
+                  }
+                }
+              }
+            }
+            return full;
+          }
+          /* ===== 对话框核心逻辑 ===== */
+          var chatBody = document.getElementById('chat-body');
+          var chatEmpty = document.getElementById('chat-empty');
+          var chatInput = document.getElementById('chat-input');
+          var sendBtn = document.getElementById('send-btn');
+          var chatWc = document.getElementById('chat-wc');
+          var chatPromptTag = document.getElementById('chat-prompt-tag');
+          var chatClear = document.getElementById('chat-clear');
+          var modeAuto = document.getElementById('mode-auto');
+          var modeHuman = document.getElementById('mode-human');
+          var chatMode = 'auto'; /* auto | human */
+          var activePrompt = null; /* {group,name,text} */
+          var chatHistory = [];
+          /* ===== 对话历史持久化：localStorage 快存 + 服务端 data/ai-short.json 备份 ===== */
+          var HIST_KEY = 'rgyw_ai_short_v1';
+          var _hTimer = null;
+          function persistHistory() {
+            var payload = { history: chatHistory, savedAt: new Date().toISOString() };
+            try { localStorage.setItem(HIST_KEY, JSON.stringify(payload)); } catch (e) {}
+            clearTimeout(_hTimer);
+            _hTimer = setTimeout(function () {
+              try {
+                fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short', data: payload }) }).catch(function () {});
+              } catch (e) {}
+            }, 500);
+          }
+          /* ===== 生成中草稿：长文逐章落盘，避免中途刷新丢已生成内容 ===== */
+          var DRAFT_KEY = 'rgyw_ai_short_draft';
+          var _dTimer = null;
+          var _draftTick = 0;
+          function saveDraft(partialFull) {
+            if (!partialFull) return;
+            var data = { partial: partialFull, savedAt: new Date().toISOString() };
+            try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch (e) {}
+            clearTimeout(_dTimer);
+            _dTimer = setTimeout(function () {
+              try {
+                fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short-draft', data: data }) }).catch(function () {});
+              } catch (e) {}
+            }, 800);
+          }
+          function clearDraft() {
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+            clearTimeout(_dTimer);
+            try {
+              fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short-draft', data: {} }) }).catch(function () {});
+            } catch (e) {}
+          }
+          function appendDraftIfAny() {
+            var partial = '';
+            try { var raw = localStorage.getItem(DRAFT_KEY); if (raw) { var p = JSON.parse(raw); partial = p.partial || ''; } } catch (e) {}
+            if (!partial) return;
+            var aiMsg = addMessage('assistant', partial);
+            chatHistory.push({ role: 'assistant', content: partial });
+            updateChatWc();
+            makeAiCard(aiMsg, partial);
+          }
+          function renderHistory(history) {
+            chatBody.innerHTML = '';
+            chatHistory = [];
+            (history || []).forEach(function (m) {
+              if (m && m.content) { chatHistory.push({ role: m.role, content: m.content }); addMessage(m.role, m.content); }
+            });
+            updateChatWc();
+          }
+          function restoreHistory() {
+            try {
+              var raw = localStorage.getItem(HIST_KEY);
+              if (raw) { var p = JSON.parse(raw); if (p && p.history && p.history.length) renderHistory(p.history); }
+            } catch (e) {}
+            try { appendDraftIfAny(); } catch (e) {}
+            try {
+              fetch('/api/data?key=ai-short').then(function (r) { return r.json(); }).then(function (res) {
+                if (res && res.ok && res.data && res.data.history && res.data.history.length) {
+                  var ls = '';
+                  try { var lp = JSON.parse(localStorage.getItem(HIST_KEY) || 'null'); ls = lp ? (lp.savedAt || '') : ''; } catch (e2) {}
+                  if ((res.data.savedAt || '') > ls) {
+                    try { localStorage.setItem(HIST_KEY, JSON.stringify(res.data)); } catch (e2) {}
+                    renderHistory(res.data.history);
+                  }
+                }
+              }).catch(function () {});
+            } catch (e) {}
+          }
+          function clearHistory() {
+            chatHistory = [];
+            try { localStorage.removeItem(HIST_KEY); } catch (e) {}
+            try {
+              fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'ai-short', data: { history: [], savedAt: new Date().toISOString() } }) }).catch(function () {});
+            } catch (e) {}
+          }
+          var generating = false;
+
+          /* 提示词按钮总入口：点击展开/收起一列提示词 */
+          var promptToggle = document.getElementById('prompt-toggle');
+          var promptPanel = document.getElementById('prompt-panel');
+          function setPromptOpen(open) {
+            promptPanel.hidden = !open;
+            promptToggle.setAttribute('aria-expanded', String(open));
+          }
+          if (promptToggle) promptToggle.addEventListener('click', function () { setPromptOpen(promptPanel.hidden); });
+          document.addEventListener('click', function (e) {
+            var picker = document.getElementById('prompt-picker');
+            if (picker && !picker.contains(e.target)) setPromptOpen(false);
+          });
+
+          function setMode(m) {
+            chatMode = m;
+            modeAuto.setAttribute('aria-pressed', String(m === 'auto'));
+            modeHuman.setAttribute('aria-pressed', String(m === 'human'));
+            chatInput.placeholder = m === 'auto' ? '输入故事设定、情节、关键词，或选择左侧提示词后发送……' : '描述你的故事想法：题材、主角、核心冲突或想写的片段……';
+          }
+          if (modeAuto) modeAuto.addEventListener('click', function () { setMode('auto'); });
+          if (modeHuman) modeHuman.addEventListener('click', function () { setMode('human'); });
+
+          function removeEmpty() { if (chatEmpty) { chatEmpty.remove(); chatEmpty = null; } }
+
+          function addMessage(role, text) {
+            removeEmpty();
+            var wrap = document.createElement('div');
+            wrap.className = 'message ' + role;
+            var avatar = role === 'user' ? '你' : '日';
+            var row = document.createElement('div');
+            row.className = 'message-row';
+            var av = document.createElement('span');
+            av.className = 'message-avatar';
+            av.setAttribute('aria-hidden', 'true');
+            av.textContent = avatar;
+            var bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text;
+            row.appendChild(av);
+            row.appendChild(bubble);
+            wrap.appendChild(row);
+            chatBody.appendChild(wrap);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            return wrap;
+          }
+
+          function getWordCountReq() {
+            var sel = document.getElementById('wc-select');
+            var v = sel ? parseInt(sel.value, 10) : 7000;
+            if (!v) return ' 请创作一篇两万字以上的长篇小说。';
+            if (v >= 7000) return ' 请创作一篇约 ' + v + ' 字的长篇小说，情节要有完整的起承转合与多次波折。';
+            return ' 请将故事控制在约 ' + v + ' 字。';
+          }
+
+          function buildMessages(userText) {
+            var msgs = [];
+            var wcReq = getWordCountReq();
+            var tc = getTargetChars();
+            var isLong = tc === 0 || tc >= 7000;
+            var extra = isLong ? ' 正文按章节组织：每章以「第1章」「第2章」…阿拉伯数字编号开头（可带简短章名），每章约2500字，写满一章即停止；不要使用「起：」「承：」「转：」「合：」等大纲标记；开头第一行为全书标题，之后为正文。' : '';
+            var sys = '你是一位专业的小说创作助手。请根据用户的创作指令和对话内容，创作一篇精彩的短篇故事。要求情节完整、文笔流畅、有起承转合。' + wcReq + extra;
+            if (activePrompt) {
+              sys = '你是一位专业的小说创作助手。用户已选择以下创作指令，请严格遵循该指令创作一篇完整的短篇故事。要求情节完整、文笔流畅、有起承转合，直接输出故事正文。' + wcReq + extra + '\n\n【创作指令】\n' + activePrompt.text;
+            }
+            msgs.push({ role: 'system', content: sys });
+            chatHistory.forEach(function (m) { msgs.push(m); });
+            if (userText) {
+              msgs.push({ role: 'user', content: userText });
+            } else if (!chatHistory.length && activePrompt) {
+              msgs.push({ role: 'user', content: isLong ? '请严格按照上面的创作指令，创作一篇完整的长篇小说。请先输出全书标题，再以「第1章」开头写第1章正文（约2500字），写完第1章即停止，不要继续写第2章。' : '请严格按照上面的创作指令，创作一篇完整的短篇故事。' });
+            } else if (msgs[msgs.length - 1].role !== 'user') {
+              msgs.push({ role: 'user', content: '请继续。' });
+            }
+            return msgs;
+          }
+
+          function updateChatWc() {
+            var wc = chatBody.textContent.replace(/\s/g, '').length;
+            chatWc.textContent = wc ? '共 ' + wc + ' 字' : '';
+          }
+
+          /* 右侧正文预览 */
+          function showPreview(text, name) {
+            var body = document.getElementById('preview-body');
+            var title = document.getElementById('preview-title');
+            var wc = document.getElementById('preview-wc');
+            if (!body) return;
+            var parts = splitTitleBody(text);
+            title.textContent = (name || parts.title || '正文预览');
+            wc.textContent = '共 ' + String(text || '').replace(/\s/g, '').length + ' 字';
+            body.innerHTML = '';
+            var div = document.createElement('div');
+            div.className = 'preview-text';
+            if (parts.title) {
+              var h = document.createElement('div');
+              h.className = 'pv-title';
+              h.textContent = parts.title;
+              div.appendChild(h);
+            }
+            var p = document.createElement('div');
+            p.className = 'pv-content';
+            p.textContent = parts.body;
+            div.appendChild(p);
+            body.appendChild(div);
+          }
+
+          function makeAiCard(aiMsg, text) {
+            var parts = splitTitleBody(text);
+            var bubble = aiMsg.querySelector('.message-bubble');
+            if (!bubble) return;
+            bubble.innerHTML = '';
+            var inner = document.createElement('div');
+            inner.className = 'ai-card';
+            var t = document.createElement('div');
+            t.className = 'ai-card-title';
+            t.textContent = parts.title || '（无标题）';
+            var s = document.createElement('div');
+            s.className = 'ai-card-summary';
+            s.textContent = '共 ' + String(text || '').replace(/\s/g, '').length + ' 字';
+            var tip = document.createElement('div');
+            tip.className = 'ai-card-tip';
+            tip.textContent = '点击查看全文 →';
+            inner.appendChild(t);
+            inner.appendChild(s);
+            inner.appendChild(tip);
+            bubble.appendChild(inner);
+            aiMsg.classList.add('msg-card');
+            aiMsg.addEventListener('click', function () { showPreview(text, parts.title); });
+            showPreview(text, parts.title);
+          }
+
+          function finishAiMsg(aiMsg, text) {
+            aiMsg.classList.remove('loading');
+            aiMsg.querySelector('.message-bubble').textContent = text;
+            chatBody.scrollTop = chatBody.scrollHeight;
+            updateChatWc();
+            addMsgActions(aiMsg, text);
+            chatHistory.push({ role: 'assistant', content: text });
+            persistHistory();
+            clearDraft();
+            makeAiCard(aiMsg, text);
+          }
+
+          function failAiMsg(aiMsg, err) {
+            aiMsg.classList.remove('loading');
+            aiMsg.querySelector('.message-bubble').textContent = 'AI 调用失败：' + err + '\n\n降级为演示模式…';
+            var demoText = genShort(activePrompt ? activePrompt.group : '一、创作方法论', activePrompt ? activePrompt.name : '短篇');
+            setTimeout(function () { finishAiMsg(aiMsg, demoText); generating = false; sendBtn.disabled = false; }, 600);
+          }
+
+          function sendMessage() {
+            if (generating) return;
+            var userText = chatInput.value.trim();
+            if (!userText && !activePrompt) {
+              addMessage('ai', '请先点击「提示词」选择一条创作指令，或直接输入你的故事想法。');
+              return;
+            }
+            if (userText) {
+              addMessage('user', userText);
+              chatHistory.push({ role: 'user', content: userText });
+              persistHistory();
+              chatInput.value = '';
+            }
+            generating = true;
+            sendBtn.disabled = true;
+            var aiMsg = addMessage('ai', '正在生成中');
+            aiMsg.classList.add('loading');
+            var config = getAiConfig();
+            if (config && config.apiBase && config.apiKey && config.model) {
+              var targetChars = getTargetChars();
+              if (targetChars === 0 || targetChars >= 7000) {
+                /* 长文：按章续写，实时展示进度 */
+                (async function () {
+                  try {
+                    var bubble = aiMsg.querySelector('.message-bubble');
+                    var progChars = 0;
+                    var progTarget = targetChars > 0 ? targetChars + ' 字' : '2万以上';
+                    var timer = setInterval(function () {
+                      aiMsg.classList.add('loading');
+                      bubble.textContent = '正在生成中…（约 ' + (progChars > 0 ? progChars : '0') + ' 字，目标 ' + progTarget + '）';
+                      chatBody.scrollTop = chatBody.scrollHeight;
+                    }, 400);
+                    var result = await generateLongStory(config, userText, function (fullText, total) {
+                      progChars = total;
+                      saveDraft(fullText);
+                    });
+                    clearInterval(timer);
+                    aiMsg.classList.remove('loading');
+                    finishAiMsg(aiMsg, result);
+                    generating = false;
+                    sendBtn.disabled = false;
+                  } catch (e) {
+                    clearInterval(timer);
+                    failAiMsg(aiMsg, e.message);
+                  }
+                })();
+              } else {
+                callChatApi(config, buildMessages(userText),
+                  function (text) { aiMsg.classList.add('loading'); var _b = aiMsg.querySelector('.message-bubble'); if (_b) _b.textContent = '正在生成中…（约 ' + String(text || '').replace(/\s/g, '').length + ' 字）'; chatBody.scrollTop = chatBody.scrollHeight; var _now = Date.now(); if (_now - _draftTick > 1000) { _draftTick = _now; saveDraft(text); } },
+                  function (text) { finishAiMsg(aiMsg, text); generating = false; sendBtn.disabled = false; },
+                  function (err) { failAiMsg(aiMsg, err); }
+                );
+              }
+            } else {
+              setTimeout(function () {
+                var demoText = genShort(activePrompt ? activePrompt.group : '一、创作方法论', activePrompt ? activePrompt.name : '短篇');
+                finishAiMsg(aiMsg, demoText);
+                generating = false;
+                sendBtn.disabled = false;
+              }, 600);
+            }
+          }
+          if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+          if (chatInput) chatInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+          });
+          if (chatClear) chatClear.addEventListener('click', function () {
+            chatBody.innerHTML = '';
+            clearHistory();
+            activePrompt = null;
+            chatPromptTag.textContent = '未选择指令';
+            chatWc.textContent = '';
+            document.querySelectorAll('.si-row.active').forEach(function (el) { el.classList.remove('active'); });
+            var empty = document.createElement('div');
+            empty.className = 'chat-empty';
+            empty.id = 'chat-empty';
+            empty.innerHTML = '<svg width="52" height="52" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg><p>点击「提示词」选择一条创作指令，<br />然后在下方输入故事想法，点击「发送」开始创作。</p>';
+            chatBody.appendChild(empty);
+            chatEmpty = empty;
+            renderEmptyQuick();
+            var pv = document.getElementById('preview-title');
+            var pwc = document.getElementById('preview-wc');
+            var pvb = document.getElementById('preview-body');
+            if (pv) pv.textContent = '正文预览';
+            if (pwc) pwc.textContent = '';
+            if (pvb) {
+              pvb.innerHTML = '<div class="preview-empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg><p>点击左侧对话中的正文卡片，<br />即可在这里查看完整内容。<br /><strong>对话生成记录永久保存</strong></p></div>';
+            }
+          });
+
+          /* 产出链接：把当前对话生成独立分享页并保存到服务器 */
+          var shareLinkBtn = document.getElementById('share-link');
+          if (shareLinkBtn) shareLinkBtn.addEventListener('click', function () {
+            var hasContent = chatHistory.some(function (m) { return m && m.content && String(m.content).trim(); });
+            if (!hasContent) {
+              shareLinkBtn.textContent = '暂无内容';
+              setTimeout(function () { shareLinkBtn.textContent = '产出链接'; }, 1500);
+              return;
+            }
+            shareLinkBtn.disabled = true;
+            shareLinkBtn.textContent = '生成中…';
+            var parts = [];
+            chatHistory.forEach(function (m) {
+              if (!m || !m.content || !String(m.content).trim()) return;
+              var isUser = m.role === 'user';
+              var text = String(m.content).trim();
+              if (isUser) {
+                parts.push('<div class="msg user"><div class="who">我</div><div class="text">' + escapeHtml(text) + '</div></div>');
+              } else {
+                var s = splitTitleBody(text);
+                var titleBlock = s.title ? '<div class="title">' + escapeHtml(s.title) + '</div>' : '';
+                parts.push('<div class="msg ai"><div class="who">AI 短篇</div>' + titleBlock + '<div class="text">' + escapeHtml(s.body) + '</div></div>');
+              }
+            });
+            var shareTitle = activePrompt ? activePrompt.name : 'AI 短篇创作';
+            var shareHtml = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + escapeHtml(shareTitle) + ' | 日光写作</title><style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f1f5f9;color:#0f172a;line-height:1.8}header{background:#0f766e;color:#fff;padding:2rem 1.5rem;text-align:center}header h1{margin:0 0 .25rem;font-size:1.5rem}header p{margin:0;opacity:.8;font-size:.875rem}.wrap{max-width:46rem;margin:1.5rem auto;padding:0 1rem 3rem}.msg{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}.msg .who{font-size:.75rem;font-weight:700;margin-bottom:.375rem}.msg.user .who{color:#0f766e}.msg.ai .who{color:#b45309}.msg .title{font-size:1.0625rem;font-weight:700;color:#0f766e;margin-bottom:.5rem}.msg .text{font-size:.9375rem;white-space:pre-wrap;word-break:break-word}footer{text-align:center;color:#64748b;font-size:.8125rem;padding:1.5rem}</style></head><body><header><h1>' + escapeHtml(shareTitle) + '</h1><p>日光写作 · AI 短篇生成</p></header><div class="wrap">' + parts.join('') + '</div><footer>由日光写作 AI 短篇创作</footer></body></html>';
+            fetch('/api/save-share', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title: shareTitle, html: shareHtml })
+            }).then(function (r) { return r.json(); }).then(function (data) {
+              if (!data || !data.url) throw new Error('no url');
+              var full = location.origin + data.url;
+              shareLinkBtn.textContent = '已生成 ✓';
+              shareLinkBtn.disabled = false;
+              setTimeout(function () { shareLinkBtn.textContent = '产出链接'; }, 2000);
+              /* 在对话区插入链接结果卡片 */
+              removeEmpty();
+              var card = document.createElement('div');
+              card.className = 'share-card';
+              var label = document.createElement('div');
+              label.className = 'share-card-label';
+              label.textContent = '分享链接已生成：';
+              var linkRow = document.createElement('div');
+              linkRow.className = 'share-card-row';
+              var input = document.createElement('input');
+              input.type = 'text';
+              input.readOnly = true;
+              input.value = full;
+              input.className = 'share-card-input';
+              var copyBtn = document.createElement('button');
+              copyBtn.type = 'button';
+              copyBtn.className = 'btn btn-primary';
+              copyBtn.textContent = '复制链接';
+              copyBtn.addEventListener('click', function () {
+                copyToClipboard(full, copyBtn, '复制链接');
+              });
+              linkRow.appendChild(input);
+              linkRow.appendChild(copyBtn);
+              card.appendChild(label);
+              card.appendChild(linkRow);
+              chatBody.appendChild(card);
+              chatBody.scrollTop = chatBody.scrollHeight;
+              updateChatWc();
+            }).catch(function () {
+              shareLinkBtn.textContent = '生成失败';
+              shareLinkBtn.disabled = false;
+              setTimeout(function () { shareLinkBtn.textContent = '产出链接'; }, 1500);
+            });
+          });
+          function splitTitleBody(text) {
+            var t = String(text || '');
+            var lines = t.split('\n');
+            var title = '';
+            while (lines.length && !lines[0].trim()) lines.shift();
+            if (lines.length) { title = lines.shift().trim(); }
+            /* 清洗标题包裹符号：书名号、引号、星号等 */
+            title = title.replace(/^[《「『“”’"'*#\s]+|[》」』“”’"'*#\s]+$/g, '').trim();
+            var body = lines.join('\n').replace(/^\n+/, '').replace(/\n+$/, '');
+            /* 若剩余正文为空（正文无换行被误判为标题），将整段归入正文 */
+            if (!body && title) {
+              if (t.split('\n').filter(function (l) { return l.trim(); }).length <= 1) {
+                return { title: '', body: t.trim() };
+              }
+            }
+            return { title: title, body: body };
+          }
+          function copyToClipboard(text, btn, label) {
+            if (!text) return;
+            var done = function () { btn.textContent = '已复制 ✓'; setTimeout(function () { btn.textContent = label; }, 1500); };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+            } else { fallbackCopy(text); done(); }
+          }
+          /* ===== 对话框核心逻辑 ===== */
+          function addMsgActions(aiMsg, text) {
+            if (!aiMsg || !text) return;
+            var old = aiMsg.querySelector('.msg-actions');
+            if (old) old.remove();
+            var parts = splitTitleBody(text);
+            var act = document.createElement('div');
+            act.className = 'msg-actions';
+            var mk = function (label, fn) {
+              var b = document.createElement('button');
+              b.type = 'button';
+              b.className = 'btn btn-ghost';
+              b.textContent = label;
+              b.addEventListener('click', function (e) { e.stopPropagation(); fn(e); });
+              act.appendChild(b);
+              return b;
+            };
+            mk('复制标题', function (e) { copyToClipboard(parts.title, e.currentTarget, '复制标题'); });
+            mk('复制正文', function (e) { copyToClipboard(parts.body, e.currentTarget, '复制正文'); });
+            mk('下载 txt', function () {
+              var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+              var a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = (parts.title || 'AI短篇') + '.txt';
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+            });
+            aiMsg.appendChild(act);
+          }
+
+          /* 选择左侧指令 */
+          function selectPrompt(g, p, row) {
+            document.querySelectorAll('.si-row.active').forEach(function (el) { el.classList.remove('active'); });
+            if (row) row.classList.add('active');
+            activePrompt = { group: g.name, name: p.name, text: p.text };
+            chatPromptTag.textContent = p.name;
+            setPromptOpen(false);
+            if (chatMode === 'auto') {
+              sendMessage();
+            } else {
+              addMessage('ai', '已选择指令《' + p.name + '》。请在下方描述你的故事想法（题材、主角、冲突或想写的片段），我会结合指令逐步帮你打磨。');
+            }
+          }
+
+          /* 空状态快捷指令入口 */
+          var QUICK_PROMPT_NAMES = ['雪花写作法指令', '都市爽文指令', '玄幻小说指令', '悬疑小说指令', '甜宠爽文指令'];
+          function findPromptByName(name) {
+            for (var gi = 0; gi < groups.length; gi++) {
+              for (var pi = 0; pi < groups[gi].items.length; pi++) {
+                if (groups[gi].items[pi].name === name) return { g: groups[gi], p: groups[gi].items[pi] };
+              }
+            }
+            return null;
+          }
+          function renderEmptyQuick() {
+            if (!chatEmpty) return;
+            var old = chatEmpty.querySelector('.empty-quick');
+            if (old) old.remove();
+            var wrap = document.createElement('div');
+            wrap.className = 'empty-quick';
+            var label = document.createElement('span');
+            label.className = 'empty-quick-label';
+            label.textContent = '试试这些指令：';
+            wrap.appendChild(label);
+            QUICK_PROMPT_NAMES.forEach(function (name) {
+              var found = findPromptByName(name);
+              if (!found) return;
+              var chip = document.createElement('button');
+              chip.type = 'button';
+              chip.className = 'empty-quick-chip';
+              chip.textContent = found.p.name;
+              chip.addEventListener('click', function () { selectPrompt(found.g, found.p, null); });
+              wrap.appendChild(chip);
+            });
+            chatEmpty.appendChild(wrap);
+          }
+
+          /* 渲染左侧指令列表 */
+          groups.forEach(function (g) {
+            var box = document.createElement('div');
+            box.className = 'short-group';
+            var head = document.createElement('button');
+            head.type = 'button';
+            head.className = 'sg-head';
+            head.setAttribute('aria-expanded', 'false');
+            head.innerHTML = '<span>' + escapeHtml(g.name) + '</span><span class="sg-count">' + g.items.length + ' 条</span>';
+            var body = document.createElement('div');
+            body.className = 'sg-body';
+            g.items.forEach(function (p) {
+              var row = document.createElement('button');
+              row.type = 'button';
+              row.className = 'si-row';
+              row.title = p.name;
+              var name = document.createElement('span');
+              name.className = 'si-name';
+              name.textContent = p.name;
+              var copy = document.createElement('span');
+              copy.className = 'si-copy';
+              copy.textContent = '复制';
+              copy.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var done = function () { copy.textContent = '已复制 ✓'; setTimeout(function () { copy.textContent = '复制'; }, 1500); };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                  navigator.clipboard.writeText(p.text).then(done, function () { fallbackCopy(p.text); done(); });
+                } else { fallbackCopy(p.text); done(); }
+              });
+              row.appendChild(name);
+              row.appendChild(copy);
+              row.addEventListener('click', function () { selectPrompt(g, p, row); });
+              body.appendChild(row);
+            });
+            head.addEventListener('click', function () {
+              var open = body.classList.toggle('open');
+              head.setAttribute('aria-expanded', String(open));
+            });
+            box.appendChild(head);
+            box.appendChild(body);
+            shortGroups.appendChild(box);
+          });
+          renderEmptyQuick();
+          restoreHistory();
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="日光写作 —— 正文创作工作台：章节管理、AI 写作、拆稿审稿纠错一站式完成。" />
+    <title>正文创作 | 日光写作</title>
+    <link rel="stylesheet" href="./theme.css" />
+    <style>
+      /* 创作工作台局部样式 */
+      .studio-topbar { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .75rem 1.5rem; background: var(--color-surface); border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
+      .studio-project { font-weight: 700; font-size: .9375rem; margin-right: .5rem; white-space: nowrap; }
+      .studio-divider { width: 1px; height: 1.5rem; background: var(--color-border); margin: 0 .25rem; flex: none; }
+      .ai-btn { border: 1px solid transparent; background: var(--color-primary-soft); color: var(--color-primary-deep); border-radius: 8px; padding: .375rem .75rem; font-size: .8125rem; font-weight: 600; cursor: pointer; transition: background .15s ease, transform .15s ease; white-space: nowrap; }
+      .ai-btn:hover { background: var(--gradient-primary); color: #fff; transform: translateY(-1px); }
+      .topbar-spacer { flex: 1; }
+      .word-count { font-size: .8125rem; color: var(--color-muted-text); white-space: nowrap; }
+      .save-ok { font-size: .8125rem; color: #047857; }
+      .more-wrap { position: relative; }
+      .more-menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 11rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-pop); padding: .375rem; z-index: 30; }
+      .more-menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: .5rem .75rem; border-radius: 8px; font-size: .875rem; color: var(--color-text); cursor: pointer; }
+      .more-menu button:hover { background: var(--color-primary-soft); color: var(--color-primary-deep); }
+      .more-menu .danger { color: #dc2626; }
+      .more-menu .danger:hover { background: #fef2f2; color: #dc2626; }
+      .studio-body { display: grid; grid-template-columns: 264px 1fr; gap: 1.5rem; padding: 1.5rem; max-width: 84rem; margin: 0 auto; align-items: start; }
+      .studio-side { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1rem; position: sticky; top: 5rem; }
+      .side-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .75rem; }
+      .side-head h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+      .side-search { width: 100%; margin-bottom: .75rem; }
+      .chapter-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .375rem; }
+      .chapter-item { border: 1px solid var(--color-border); border-radius: 10px; padding: .625rem .75rem; cursor: pointer; transition: border-color .15s ease, background .15s ease; }
+      .chapter-item:hover { border-color: var(--color-primary); }
+      .chapter-item.current { border-color: var(--color-primary); background: var(--color-primary-soft); }
+      .chapter-item .ci-title { font-size: .875rem; font-weight: 600; margin: 0 0 .125rem; }
+      .chapter-item .ci-meta { font-size: .75rem; color: var(--color-muted-text); display: flex; gap: .5rem; flex-wrap: wrap; }
+      .chapter-item .ci-ops { display: flex; gap: .375rem; margin-top: .375rem; }
+      .ci-op { border: 0; background: none; color: var(--color-primary); font-size: .75rem; cursor: pointer; padding: 0; }
+      .ci-op:hover { text-decoration: underline; }
+      .studio-canvas { min-width: 0; }
+      .canvas-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+      .canvas-head h1 { margin: 0; font-size: 1.375rem; font-weight: 800; letter-spacing: .04em; }
+      .canvas-head .canvas-index { font-size: .8125rem; color: var(--color-muted-text); }
+      .canvas-body { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 2.5rem 3rem; box-shadow: var(--shadow-soft); line-height: 2; font-size: 1.0625rem; color: var(--color-text); outline: none; min-height: 60vh; }
+      .canvas-body p { margin: 0 0 1.125rem; text-indent: 2em; }
+      .canvas-body .empty-tip { text-indent: 0; color: var(--color-muted-text); text-align: center; padding-top: 3rem; }
+      .canvas-body:focus-visible { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-focus-ring); }
+      .canvas-body .ai-insert { background: var(--color-primary-soft); border-radius: 6px; padding: .25rem .5rem; }
+      .canvas-tools { display: flex; align-items: center; gap: .75rem; margin-top: 1rem; flex-wrap: wrap; }
+      @media (max-width: 900px) { .studio-body { grid-template-columns: 1fr; } .studio-side { position: static; } .canvas-body { padding: 1.5rem 1.25rem; } }
+      /* 弹窗与面板 */
+      dialog { border: 0; border-radius: var(--radius-lg); padding: 1.5rem; width: min(26rem, 92vw); box-shadow: var(--shadow-pop); }
+      dialog::backdrop { background: rgba(31,26,21,.36); }
+      dialog h2 { margin: 0 0 1rem; font-size: 1.125rem; }
+      dialog.dlg-wide { width: min(34rem, 94vw); }
+      .dlg-form { display: flex; flex-direction: column; gap: .875rem; }
+      .dlg-form .field label { display: block; font-size: .8125rem; font-weight: 600; margin-bottom: .375rem; color: var(--color-primary-deep); }
+      .dlg-form .field input, .dlg-form .field select, .dlg-form .field textarea { width: 100%; box-sizing: border-box; }
+      .dlg-form .field textarea { min-height: 5rem; resize: vertical; }
+      .dlg-actions { display: flex; justify-content: flex-end; gap: .625rem; margin-top: .25rem; }
+      .report-body { max-height: 50vh; overflow: auto; font-size: .9375rem; line-height: 1.75; }
+      .report-body ul { margin: .25rem 0 .5rem; padding-left: 1.25rem; }
+      .report-body li { margin: .25rem 0; }
+      .report-body .r-tag { display: inline-block; font-size: .75rem; font-weight: 600; padding: .0625rem .4375rem; border-radius: 999px; margin-right: .375rem; vertical-align: .0625rem; }
+      .r-ok { background: #ecfdf5; color: #047857; }
+      .r-warn { background: #fef3c7; color: #92400e; }
+      .r-bad { background: #fee2e2; color: #b91c1c; }
+      .lib-list { list-style: none; margin: 0 0 .75rem; padding: 0; display: flex; flex-direction: column; gap: .5rem; max-height: 30vh; overflow: auto; }
+      .lib-item { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; border: 1px solid var(--color-border); border-radius: 10px; padding: .625rem .75rem; }
+      .lib-item .li-main { min-width: 0; }
+      .lib-item .li-name { font-weight: 600; font-size: .875rem; }
+      .lib-item .li-role { font-size: .75rem; color: var(--color-primary-deep); margin-left: .375rem; }
+      .lib-item .li-desc { font-size: .8125rem; color: var(--color-muted-text); margin-top: .125rem; }
+      .lib-item button { flex: none; }
+      .lib-empty { color: var(--color-muted-text); font-size: .875rem; padding: .5rem 0; }
+      /* 信息库弹窗 */
+      #lib-dialog { width: min(44rem, 94vw); max-height: 88vh; overflow: auto; }
+      .lib-sub { font-size: .8125rem; color: var(--color-muted-text); margin: -.5rem 0 1rem; line-height: 1.6; }
+      .lib-sec { border: 1px solid var(--color-border); border-radius: 10px; padding: .75rem; margin-bottom: .75rem; }
+      .lib-sec-title { font-weight: 700; font-size: .875rem; color: var(--color-primary-deep); margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem; }
+      .lib-sec-title .lib-count { font-weight: 400; font-size: .75rem; color: var(--color-muted-text); }
+      .lib-add-form { margin-top: .375rem; }
+      .lib-add-form .row { display: flex; gap: .375rem; flex-wrap: wrap; }
+      .lib-add-form input { flex: 1; min-width: 6rem; padding: .375rem .5rem; font-size: .8125rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-text); }
+      .lib-add-form input.lib-name { flex: 0 0 8.5rem; font-weight: 600; }
+      .lib-add-form input.lib-role { flex: 0 0 5.5rem; }
+      .lib-add-form .btn { flex: none; }
+      .report-body pre { background: var(--color-primary-soft); border-radius: 10px; padding: .75rem 1rem; white-space: pre-wrap; font-size: .875rem; line-height: 1.75; margin: .25rem 0 .75rem; }
+      .btn-danger { background: #dc2626; color: #fff; }
+      .btn-danger:hover { background: #b91c1c; }
+    </style>
+  </head>
+  <body data-page-id="chapter">
+    <a class="skip-link" href="#main-content">跳转到主要内容</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="日光写作首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+          </span>
+          日光写作
+        </a>
+        <nav class="main-nav" aria-label="主导航">
+          <a href="bookshelf.html">书架</a>
+          <a href="write.html">AI写作</a>
+          <a href="prompts.html">提示词库</a>
+          <a href="ai-short.html">AI短篇</a>
+          <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+        </nav>
+        <div class="header-actions">
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">菜单</button>
+          <a class="btn btn-primary" href="write.html">立即开始创作</a>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
+        <a href="bookshelf.html">书架</a>
+        <a href="write.html">AI写作</a>
+        <a href="prompts.html">提示词库</a>
+        <a href="ai-short.html">AI短篇</a>
+        <a href="tools.html">创意工具箱</a>
+        <a href="settings.html">设置</a>
+        <a class="btn btn-primary btn-block" href="write.html">立即开始创作</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <!-- 顶部 AI 创作功能栏 -->
+      <div class="studio-topbar" role="toolbar" aria-label="AI 创作工具">
+        <a class="btn btn-ghost" href="bookshelf.html" style="padding:.375rem .875rem;font-size:.8125rem;">← 书架</a>
+        <span class="studio-project" id="studio-project">书名 · 章节</span>
+        <span class="studio-divider" aria-hidden="true"></span>
+        <button class="ai-btn" type="button" data-ai="write">AI写作</button>
+        <button class="ai-btn" type="button" data-ai="draft">AI拆稿</button>
+        <button class="ai-btn" type="button" data-ai="review">AI审稿</button>
+        <button class="ai-btn" type="button" data-ai="fix">AI纠错</button>
+        <button class="ai-btn" type="button" data-ai="deai">AI去痕</button>
+        <span class="topbar-spacer"></span>
+        <span class="word-count" id="word-count" aria-live="polite"></span>
+        <span class="save-ok" id="save-ok" hidden>已保存 ✓</span>
+        <button class="btn btn-primary" type="button" id="save-btn" style="padding:.375rem .875rem;font-size:.8125rem;">保存</button>
+        <div class="more-wrap">
+          <button class="btn btn-ghost" type="button" id="more-btn" aria-expanded="false" aria-controls="more-menu" style="padding:.375rem .875rem;font-size:.8125rem;">更多</button>
+          <div class="more-menu" id="more-menu" hidden>
+            <button type="button" data-more="作品信息">作品信息</button>
+            <button type="button" data-more="角色库">角色库</button>
+            <button type="button" data-more="词条库">词条库</button>
+            <button type="button" data-more="信息库">信息库</button>
+            <button type="button" data-more="作品导出">作品导出</button>
+            <button type="button" class="danger" data-more="删除作品">删除作品</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="studio-body">
+        <!-- 左侧：章节管理 -->
+        <aside class="studio-side" aria-label="章节管理">
+          <div class="side-head">
+            <h2>章节</h2>
+            <button class="btn btn-ghost" type="button" id="new-chapter-btn" style="padding:.25rem .625rem;font-size:.75rem;">+ 新建章节</button>
+          </div>
+          <label class="sr-only" for="chapter-search">搜索章节</label>
+          <input class="side-search" id="chapter-search" type="search" placeholder="搜索章节…" autocomplete="off" />
+          <ul class="chapter-list" id="chapter-list"></ul>
+        </aside>
+
+        <!-- 右侧：编辑画布 -->
+        <section class="studio-canvas" aria-label="章节编辑画布">
+          <div class="canvas-head">
+            <h1 id="canvas-title">章节标题</h1>
+            <span class="canvas-index" id="canvas-index">第 1 章 / 共 1 章</span>
+          </div>
+          <div class="canvas-body" id="canvas-body" contenteditable="true" spellcheck="false" aria-label="章节正文，可直接编辑"></div>
+          <div class="canvas-tools">
+            <span class="word-count">提示：正文可直接编辑，内容会自动保存</span>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </span>
+            日光写作
+          </div>
+          <p class="footer-desc">数十万创作者选择的 AI 写作工具，专为网络小说、剧本创作者打造。</p>
+        </div>
+        <nav class="footer-nav" aria-label="页脚导航">
+          <div>
+            <h3>产品</h3>
+            <a href="bookshelf.html">书架</a>
+            <a href="write.html">AI写作</a>
+            <a href="write.html">AI续写</a>
+            <a href="write.html">AI扩写润色</a>
+          </div>
+          <div>
+            <h3>资源</h3>
+            <a href="prompts.html">提示词库</a>
+            <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+            <a href="tools.html">大纲生成器</a>
+            <a href="tools.html">人设生成器</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-bottom">© 2026 日光写作 · 让灵感永不枯竭</div>
+    </footer>
+
+    <!-- 新建章节弹窗 -->
+    <dialog id="new-chapter-dialog" aria-labelledby="new-chapter-dialog-title">
+      <h2 id="new-chapter-dialog-title">新建章节</h2>
+      <form class="dlg-form" id="new-chapter-form" aria-label="新建章节表单">
+        <div class="field">
+          <label for="nc-name">章节名称</label>
+          <input id="nc-name" type="text" placeholder="如：第488章 锋芒初露" />
+        </div>
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="nc-cancel">取消</button>
+          <button class="btn btn-primary" type="submit">创建并开始写作</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- AI 写作设置弹窗 -->
+    <dialog id="aiwrite-dialog" aria-labelledby="aiwrite-dialog-title">
+      <h2 id="aiwrite-dialog-title">AI 写作设置</h2>
+      <form class="dlg-form" id="aiwrite-form" aria-label="AI写作设置表单">
+        <div class="field">
+          <label for="aw-target">目标字数</label>
+          <select id="aw-target">
+            <option value="2000">约 2000 字</option>
+            <option value="3000" selected>约 3000 字</option>
+            <option value="4000">约 4000 字</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="aw-hint">补充设定（可选）</label>
+          <textarea id="aw-hint" placeholder="如：主角突破金丹后第一次遇到宿敌，在宗门大比上爆发冲突"></textarea>
+        </div>
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="aw-cancel">取消</button>
+          <button class="btn btn-primary" type="submit">开始生成</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- AI 报告弹窗（拆稿/审稿/去痕/纠错结果） -->
+    <dialog id="report-dialog" class="dlg-wide" aria-labelledby="report-dialog-title">
+      <h2 id="report-dialog-title">AI 分析</h2>
+      <div class="report-body" id="report-body"></div>
+      <div class="dlg-actions" style="margin-top:1rem;">
+        <button class="btn btn-primary" type="button" id="report-close">知道了</button>
+      </div>
+    </dialog>
+
+    <!-- 作品信息弹窗 -->
+    <dialog id="info-dialog" aria-labelledby="info-dialog-title">
+      <h2 id="info-dialog-title">作品信息</h2>
+      <form class="dlg-form" id="info-form" aria-label="作品信息表单">
+        <div class="field">
+          <label for="wi-title">作品名称</label>
+          <input id="wi-title" type="text" required />
+        </div>
+        <div class="field">
+          <label for="wi-kind">作品类型</label>
+          <select id="wi-kind">
+            <option value="小说">小说</option>
+            <option value="剧本">剧本</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="wi-type">文风</label>
+          <select id="wi-type"></select>
+        </div>
+        <div class="field">
+          <label for="wi-intro">作品简介</label>
+          <textarea id="wi-intro"></textarea>
+        </div>
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="wi-cancel">取消</button>
+          <button class="btn btn-primary" type="submit">保存修改</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- 通用确认弹窗 -->
+    <dialog id="confirm-dialog" aria-labelledby="confirm-dialog-title">
+      <h2 id="confirm-dialog-title">确认操作</h2>
+      <p id="confirm-msg" style="margin:0 0 1.25rem;font-size:.9375rem;line-height:1.7;color:var(--color-text);"></p>
+      <div class="dlg-actions">
+        <button class="btn btn-ghost" type="button" id="confirm-no">取消</button>
+        <button class="btn btn-primary" type="button" id="confirm-yes">确定</button>
+      </div>
+    </dialog>
+
+    <!-- 角色库弹窗 -->
+    <dialog id="char-dialog" class="dlg-wide" aria-labelledby="char-dialog-title">
+      <h2 id="char-dialog-title">角色库</h2>
+      <ul class="lib-list" id="char-list"></ul>
+      <form class="dlg-form" id="char-form" aria-label="新增角色表单">
+        <div style="display:flex;gap:.625rem;flex-wrap:wrap;">
+          <input id="char-name" type="text" placeholder="角色姓名" style="flex:1;min-width:6rem;" />
+          <input id="char-role" type="text" placeholder="身份（主角/反派…）" style="flex:1;min-width:6rem;" />
+        </div>
+        <input id="char-desc" type="text" placeholder="一句话人设描述" />
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="char-cancel">关闭</button>
+          <button class="btn btn-primary" type="submit">+ 添加角色</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- 词条库弹窗 -->
+    <dialog id="term-dialog" class="dlg-wide" aria-labelledby="term-dialog-title">
+      <h2 id="term-dialog-title">词条库</h2>
+      <ul class="lib-list" id="term-list"></ul>
+      <form class="dlg-form" id="term-form" aria-label="新增词条表单">
+        <input id="term-name" type="text" placeholder="词条名称（如：青云宗）" />
+        <input id="term-desc" type="text" placeholder="词条解释" />
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="term-cancel">关闭</button>
+          <button class="btn btn-primary" type="submit">+ 添加词条</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- 信息库弹窗 -->
+    <dialog id="lib-dialog" class="dlg-wide" aria-labelledby="lib-dialog-title">
+      <h2 id="lib-dialog-title">信息库</h2>
+      <p class="lib-sub">角色 / 功法 / 地名 / 剧情线 / 金句 / 设定 / 章纲，正文写作时可随时参考与补充。新建作品时可按文风一键生成。</p>
+      <div id="lib-dlg-body"></div>
+      <div class="dlg-actions">
+        <button class="btn btn-primary" type="button" id="lib-dlg-close">关闭</button>
+      </div>
+    </dialog>
+
+    <script src="./assets/data.js"></script>
+    <script>
+      (function () {
+        var toggle = document.querySelector('.menu-toggle');
+        var nav = document.getElementById('mobile-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', function () {
+            var open = nav.style.display === 'flex';
+            nav.style.display = open ? 'none' : 'flex';
+            toggle.setAttribute('aria-expanded', String(!open));
+          });
+        }
+
+        // —— 网页风格弹窗（替代系统 confirm/alert）——
+        var confirmDlg = document.getElementById('confirm-dialog');
+        var confirmMsg = document.getElementById('confirm-msg');
+        var confirmYes = document.getElementById('confirm-yes');
+        var confirmNo = document.getElementById('confirm-no');
+        var confirmCallback = null;
+        confirmYes.addEventListener('click', function () {
+          confirmDlg.close();
+          var cb = confirmCallback;
+          confirmCallback = null;
+          if (cb) cb();
+        });
+        confirmNo.addEventListener('click', function () {
+          confirmDlg.close();
+          confirmCallback = null;
+        });
+        function uiAlert(message) {
+          confirmMsg.textContent = message;
+          confirmYes.textContent = '知道了';
+          confirmYes.className = 'btn btn-primary';
+          confirmNo.style.display = 'none';
+          confirmCallback = null;
+          confirmDlg.showModal();
+        }
+        function uiConfirm(message, opts, onOk) {
+          if (typeof opts === 'function') { onOk = opts; opts = {}; }
+          opts = opts || {};
+          confirmMsg.textContent = message;
+          confirmYes.textContent = opts.yesText || '确定';
+          confirmYes.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+          confirmNo.style.display = '';
+          confirmNo.textContent = '取消';
+          confirmCallback = onOk || null;
+          confirmDlg.showModal();
+        }
+
+        // —— 数据装载：从 URL 参数定位作品与章节 ——
+        var params = new URLSearchParams(location.search);
+        var d = RG.data();
+        // 注意：必须在当前 d 内找引用，不能用 RG.bookById（其内部会重新解析 localStorage，返回另一棵对象树）
+        var book = (d.books || []).filter(function (b) { return b.id === params.get('book'); })[0] || d.books[0];
+        var currentChapter = RG.chapterById(book, params.get('chapter')) ||
+          (book.chapters && book.chapters.length ? book.chapters[book.chapters.length - 1] : null);
+
+        var listEl = document.getElementById('chapter-list');
+        var canvasBody = document.getElementById('canvas-body');
+        var canvasTitle = document.getElementById('canvas-title');
+        var canvasIndex = document.getElementById('canvas-index');
+        var countEl = document.getElementById('word-count');
+        var projectEl = document.getElementById('studio-project');
+
+        function persist() { RG.save(d); }
+
+        // —— 画布 <-> 数据 ——
+        function readParagraphs() {
+          var paras = [];
+          canvasBody.childNodes.forEach(function (node) {
+            if (node.nodeType === 1) {
+              var t = (node.innerText || '').trim();
+              if (t) paras.push(t);
+            } else if (node.nodeType === 3) {
+              String(node.textContent).split(/\n+/).forEach(function (s) { s = s.trim(); if (s) paras.push(s); });
+            }
+          });
+          return paras;
+        }
+        function syncFromCanvas() {
+          if (!currentChapter) return;
+          currentChapter.body = readParagraphs();
+          currentChapter.words = RG.wordCount(currentChapter.body.join('\n'));
+        }
+        function countWords() {
+          var text = canvasBody.innerText || '';
+          countEl.textContent = RG.wordCount(text) + ' 字';
+        }
+
+        // —— 渲染 ——
+        function renderList() {
+          listEl.innerHTML = '';
+          if (!book.chapters || !book.chapters.length) {
+            var li = document.createElement('li');
+            li.className = 'chapter-item';
+            li.innerHTML = '<p class="ci-title">暂无章节</p>';
+            listEl.appendChild(li);
+            return;
+          }
+          book.chapters.forEach(function (ch) {
+            var li = document.createElement('li');
+            li.className = 'chapter-item' + (ch.id === currentChapter.id ? ' current' : '');
+            li.tabIndex = 0;
+            li.setAttribute('role', 'button');
+            li.setAttribute('aria-label', '切换到' + ch.title);
+            li.innerHTML =
+              '<p class="ci-title">' + ch.title + '</p>' +
+              '<div class="ci-meta"><span>' + (ch.words || 0) + ' 字</span><span>' + (ch.updatedAt || '未保存') + '</span></div>' +
+              '<div class="ci-ops">' +
+                '<button class="ci-op" type="button" data-gen="' + ch.id + '">AI生成</button>' +
+                '<button class="ci-op" type="button" data-del="' + ch.id + '">删除</button>' +
+              '</div>';
+            li.addEventListener('click', function () { switchChapter(ch.id); });
+            li.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); switchChapter(ch.id); } });
+            listEl.appendChild(li);
+          });
+          listEl.querySelectorAll('[data-gen]').forEach(function (b) {
+            b.addEventListener('click', function (e) { e.stopPropagation(); aiGenerateFor(b.dataset.gen); });
+          });
+          listEl.querySelectorAll('[data-del]').forEach(function (b) {
+            b.addEventListener('click', function (e) { e.stopPropagation(); deleteChapter(b.dataset.del); });
+          });
+        }
+
+        function renderBody() {
+          if (!currentChapter) {
+            projectEl.textContent = book.title + ' · 暂无章节';
+            canvasTitle.textContent = '';
+            canvasIndex.textContent = '共 0 章';
+            canvasBody.innerHTML = '';
+            var tip = document.createElement('p');
+            tip.className = 'empty-tip';
+            tip.textContent = '本书还没有章节，点击左侧「+ 新建章节」开始创作。';
+            canvasBody.appendChild(tip);
+            countWords();
+            renderList();
+            return;
+          }
+          projectEl.textContent = book.title + ' · ' + currentChapter.title;
+          canvasTitle.textContent = currentChapter.title;
+          canvasIndex.textContent = '第 ' + (currentChapter.no || 1) + ' 章 / 共 ' + (book.chapters ? book.chapters.length : 0) + ' 章';
+          canvasBody.innerHTML = '';
+          (currentChapter.body || []).forEach(function (p) {
+            var el = document.createElement('p');
+            el.textContent = p;
+            canvasBody.appendChild(el);
+          });
+          countWords();
+          renderList();
+        }
+
+        function switchChapter(id) {
+          var ch = RG.chapterById(book, id);
+          if (!ch) return;
+          syncFromCanvas();
+          persist();
+          currentChapter = ch;
+          history.replaceState(null, '', 'chapter.html?book=' + book.id + '&chapter=' + ch.id);
+          renderBody();
+        }
+
+        // —— 保存 ——
+        var saveOk = document.getElementById('save-ok');
+        function save(silent) {
+          if (!currentChapter) return;
+          syncFromCanvas();
+          currentChapter.updatedAt = RG.nowText();
+          book.updatedAt = RG.nowText();
+          persist();
+          if (!silent) {
+            saveOk.hidden = false;
+            setTimeout(function () { saveOk.hidden = true; }, 2000);
+          }
+        }
+        document.getElementById('save-btn').addEventListener('click', function () { save(false); });
+        canvasBody.addEventListener('input', countWords);
+        window.addEventListener('beforeunload', function () { if (currentChapter) { syncFromCanvas(); persist(); } });
+
+        // —— 新建章节 ——
+        var ncDialog = document.getElementById('new-chapter-dialog');
+        document.getElementById('new-chapter-btn').addEventListener('click', function () {
+          var nextNo = (book.chapters || []).length + 1;
+          document.getElementById('nc-name').value = '第' + nextNo + '章 ';
+          ncDialog.showModal();
+          document.getElementById('nc-name').focus();
+        });
+        document.getElementById('nc-cancel').addEventListener('click', function () { ncDialog.close(); });
+        document.getElementById('new-chapter-form').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = document.getElementById('nc-name').value.trim();
+          var nextNo = (book.chapters || []).length + 1;
+          var ch = RG.makeChapter(book.id, nextNo, name || ('第' + nextNo + '章'), []);
+          book.chapters.push(ch);
+          book.updatedAt = RG.nowText();
+          persist();
+          ncDialog.close();
+          currentChapter = ch;
+          history.replaceState(null, '', 'chapter.html?book=' + book.id + '&chapter=' + ch.id);
+          renderBody();
+          saveOk.hidden = false;
+          setTimeout(function () { saveOk.hidden = true; }, 2000);
+        });
+
+        // —— 删除章节 ——
+        function deleteChapter(id) {
+          uiConfirm('确定删除章节「' + (RG.chapterById(book, id) || {}).title + '」吗？', function () {
+            book.chapters = book.chapters.filter(function (c) { return c.id !== id; });
+            book.updatedAt = RG.nowText();
+            persist();
+            if (currentChapter && currentChapter.id === id) {
+              currentChapter = book.chapters.length ? book.chapters[book.chapters.length - 1] : null;
+              if (currentChapter) {
+                history.replaceState(null, '', 'chapter.html?book=' + book.id + '&chapter=' + currentChapter.id);
+              } else {
+                history.replaceState(null, '', 'chapter.html?book=' + book.id);
+              }
+              renderBody();
+            } else {
+              renderList();
+            }
+          });
+        }
+
+        // —— AI 工具 ——
+        var aiLocked = false;
+        function lock(btn) { btn.disabled = true; btn.textContent = '生成中…'; }
+        function unlock(btn) { btn.disabled = false; btn.textContent = btn.dataset.label || btn.textContent; }
+
+        function sampleTexts(kind) {
+          var pool = {
+            write: [
+              '他缓缓抬起手，指尖凝出一道清光。四周的议论声像是被一只无形的手扼住，骤然安静下来。',
+              '没有人知道他这三年经历了什么。只有他自己清楚，那些藏在骨血里的剑意，早已把生死淬成了锋芒。',
+              '风声渐急，远山如墨。林尘抬眼望向青云山巅，眼底没有恨意，只有一片沉静如渊的决然。',
+              '这一战之后，无论输赢，那个被逐出宗门的废材之名，都将成为过去。'
+            ]
+          };
+          return pool[kind] || pool.write;
+        }
+
+        function appendAi(text, tag) {
+          var p = document.createElement('p');
+          if (tag) {
+            var span = document.createElement('span');
+            span.className = 'ai-insert';
+            span.textContent = tag;
+            p.appendChild(span);
+          }
+          p.appendChild(document.createTextNode(text));
+          canvasBody.appendChild(p);
+          countWords();
+          save(true);
+        }
+
+        function aiGenerateFor(chId) {
+          var ch = RG.chapterById(book, chId);
+          if (!ch) return;
+          var texts = sampleTexts('write');
+          ch.body = texts.slice(0, 3);
+          ch.words = RG.wordCount(ch.body.join('\n'));
+          ch.updatedAt = RG.nowText();
+          book.updatedAt = RG.nowText();
+          persist();
+          if (currentChapter && ch.id === currentChapter.id) renderBody(); else renderList();
+          saveOk.hidden = false;
+          setTimeout(function () { saveOk.hidden = true; }, 2000);
+        }
+
+        var CHUNK_LIB = {
+          open: [
+            '夜色如墨，风从远处的山脊卷下来，带着草木与尘土的气息。他站在崖边，衣角被风扯得猎猎作响，手中的物什微微发烫，仿佛回应着他胸口的跳动。许多年后他回想这一夜，才明白命运从来不会提前打招呼，它只是在你毫无防备的时候，轻轻推了一把。',
+            '消息传得比风还快。不到半日，整个坊市都知道了那件事，街角茶摊、酒馆雅间、绸缎庄的柜台后头，人人都在压着嗓子议论。他坐在人群中间，慢慢喝完一碗茶，什么也没说，只是把碗搁下时，指节泛白。',
+            '第一缕天光爬上窗棂的时候，他终于睁开眼。屋内陈设依旧，昨夜的一切却像一场冗长的梦，清晰得可怕。他伸手摸了摸枕边，指尖触到冰凉的硬物，心口骤然一紧——那不是梦。',
+            '出发的前夜，他把所有能带的东西都装进了行囊，又一件件取出来，反复掂量。天亮时他背起行囊出门，没有回头。身后有人喊他名字，声音被晨风拉得很远，他没有停步，只是把肩上的带子又勒紧了些。',
+            '事情发生得毫无预兆。前一瞬还是寻常的午后，蝉鸣声穿过树影落进院子，下一瞬他便看见那道光从云层正中劈下，落在不远处，激起漫天烟尘。周围的人惊叫着四散，他却下意识朝那个方向迈出了半步。',
+            '他是被人从睡梦中叫醒的。来人满身尘土，声音嘶哑，只来得及说出半句话，便靠在门框上滑了下去。他愣了一瞬，随即弯腰扶起那人，指尖摸到对方背上黏腻的湿意，心沉了下去。'
+          ],
+          body: [
+            '“你确定要这么做？”对面的人压低声音，目光在烛火里明灭不定，“一旦踏出这一步，就没有回头路了。”他沉默片刻，抬起头，眼神平静：“我早就没有回头路了。”',
+            '他出手极快，快到旁观者几乎看不清动作。然而对方也不是易与之辈，侧身避开锋芒的同时，反手一刀斜斩而来。刀风贴着他的耳廓掠过，削落几缕碎发，他却不退反进，欺身而上。',
+            '一连三日，他都把自己关在屋子里。桌上的卷宗摊开又合上，墨迹干了又添，直到第三夜，他终于放下笔，长长吐出一口气。窗外的月亮不知何时已经偏西，烛台上的蜡油积了厚厚一层。',
+            '“你就不怕我骗你？”她抱着手臂，饶有兴致地看着他。“怕。”他答得干脆，“但比起被骗，我更怕连试一次的勇气都没有。”她愣了一下，随即失笑，摇了摇头。',
+            '雨下得又急又密，砸在青石板上溅起细碎的水花。他一路疾行，把外衫拢紧，穿过两条长街，在一扇不起眼的木门前停下，抬手，三长两短地叩了叩。门内沉默良久，才吱呀一声打开一道缝。',
+            '他试了三次，每一次都在最后一刻功亏一篑。额头渗出的汗顺着下颌滴落，他却不肯放弃，深吸一口气，重新凝聚心神。第四次，他感觉到那股力量在体内流转得前所未有的顺畅，像一条被驯服的河流。',
+            '“东西带来了吗？”对方坐在阴影里，声音听不出喜怒。他上前两步，把怀里的物件放在桌上，没有多言。阴影里伸出一只手，将那物件拿起来端详许久，终于道：“你要的东西，明天子时，城东废庙。”',
+            '他扶着墙慢慢站起来，肋骨处传来的痛让他吸了口凉气。四周安静得可怕，唯有自己的喘息声在空荡荡的走廊里回荡。他擦了把嘴角，扯出一个苦笑，然后拖着步子，继续向前。'
+          ],
+          turn: [
+            '变故发生在电光石火之间。他话音未落，地砖忽然塌陷，整间屋子像被无形的手攥住，猛地向下一沉。他下意识抓住身边人的手臂，脚下却是虚空，两人一同坠入黑暗。',
+            '他以为自己听错了，怔在原地。对面那人却一字一句地重复了一遍，语气平淡得近乎残忍：“从今往后，你不必再来了。”他张了张嘴，想问为什么，可对上那双眼睛，忽然什么都问不出来了。',
+            '就在他以为一切都要结束的时候，角落里传来一声极轻的笑。那笑声不大，却让他头皮一炸。他猛地回头，阴影中慢慢走出一道身影，手里把玩着一样东西——正是他以为早已毁掉的那件物什。',
+            '消息传来的时候，他正在给剑上油。信使的声音发颤，他手上的动作却没停，只问了一句：“确定？”信使点头。他沉默着把剑插回鞘中，站起来，推门走出去。门外风大，吹得他衣袍猎猎作响，他没有回头。',
+            '直到这一刻，他才发现自己从始至终都忽略了一件最关键的事。所有线索在脑海里飞速串连，他脸色一点点白了下去，手指攥紧又松开，最终哑声道：“所以，从一开始……就是一个局？”',
+            '那一击落下之前，他本能地闭了闭眼。预期的剧痛却没有到来，取而代之的，是一声沉闷的巨响和一道陌生的气息。他睁开眼，看见挡在身前的身影，瞳孔骤然一缩。',
+            '“你以为你赢了？”对方的声音从头顶传来，带着说不出的嘲弄。他抬头，看见对方不知何时已经站在了高处，居高临下地望着他，嘴角挂着诡异的弧度，“好戏，才刚刚开始。”',
+            '真相大白的那一刻，所有人都沉默了。他站在人群中央，手里攥着那封信，纸页被揉得发皱。风从门缝灌进来，吹得烛火摇摇晃晃，他闭了闭眼，再睁开时，眼底只剩下一种近乎执拗的坚定。'
+          ],
+          end: [
+            '天边泛起鱼肚白的时候，他终于走出了那片废墟。身后的残垣断壁在晨光里显得格外安静，仿佛什么都不曾发生。他抬手遮了遮眼睛，迈开步子，朝太阳升起的方向走去。',
+            '这件事很快传遍了四方，成为人们茶余饭后的谈资。只有他自己知道，那些惊心动魄的日日夜夜，最终不过化作风中一句轻描淡写的“听说”。他笑了笑，把旧事收进心底，继续赶路。',
+            '多年以后，有人问起那个夜晚，他只是摇摇头，说记不清了。只有枕边那件旧物知道，有些路一旦走过，就再也回不了头。他望向远方，目光平静，像一潭深不见底的湖水。',
+            '风停了。他站在高处，看着脚下蜿蜒的来路，忽然觉得这一路走来，所有的疲惫都有了归处。他深吸一口气，将手中的物什收进怀里，转身，大步向前。'
+          ]
+        };
+        function openAiWrite() {
+          if (aiLocked) return;
+          document.getElementById('aw-hint').value = '';
+          document.getElementById('aiwrite-dialog').showModal();
+        }
+        function confirmAiWrite() {
+          var target = parseInt(document.getElementById('aw-target').value, 10) || 3000;
+          var hint = document.getElementById('aw-hint').value.trim();
+          document.getElementById('aiwrite-dialog').close();
+          runAiWrite(target, hint);
+        }
+        document.getElementById('aw-cancel').addEventListener('click', function () { document.getElementById('aiwrite-dialog').close(); });
+        document.getElementById('aiwrite-form').addEventListener('submit', function (e) { e.preventDefault(); confirmAiWrite(); });
+        function shuffled(arr) {
+          var a = arr.slice();
+          for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i]; a[i] = a[j]; a[j] = t;
+          }
+          return a;
+        }
+        function generateChapter(target, hint) {
+          var picks = [];
+          var order = ['open', 'body', 'turn', 'body', 'open', 'body', 'turn', 'body', 'body', 'turn', 'end'];
+          var pools = {};
+          Object.keys(CHUNK_LIB).forEach(function (k) { pools[k] = shuffled(CHUNK_LIB[k]); });
+          var used = { open: 0, body: 0, turn: 0, end: 0 };
+          var total = 0;
+          var idx = 0;
+          while (total < target && idx < 40) {
+            var key = order[idx % order.length];
+            var pool = pools[key];
+            if (used[key] >= pool.length) { pools[key] = shuffled(CHUNK_LIB[key]); used[key] = 0; }
+            var text = pool[used[key]++];
+            if (idx === 0 && hint) text = hint + '。' + text;
+            picks.push(text);
+            total += RG.wordCount(text);
+            idx++;
+          }
+          return picks;
+        }
+        function runAiWrite(target, hint) {
+          var paras = readParagraphs();
+          var existing = RG.wordCount(paras.join('\n'));
+          if (existing >= target) {
+            uiAlert('本章已有 ' + existing + ' 字，已达到目标字数，建议先新建章节再进行 AI 写作。');
+            return;
+          }
+          aiLocked = true;
+          var b = document.querySelector('[data-ai="write"]');
+          lock(b);
+          setTimeout(function () {
+            var picks = generateChapter(target - existing, hint || '');
+            picks.forEach(function (t, i) { appendAi(t, ''); });
+            unlock(b); aiLocked = false;
+          }, 1000);
+        }
+        function openReport(title, html) {
+          document.getElementById('report-dialog-title').textContent = title;
+          document.getElementById('report-body').innerHTML = html;
+          document.getElementById('report-dialog').showModal();
+        }
+        document.getElementById('report-close').addEventListener('click', function () { document.getElementById('report-dialog').close(); });
+
+        function aiDraft() {
+          var paras = readParagraphs();
+          if (!paras.length) { openReport('AI 拆稿', '<p>当前章节还没有正文，无法拆稿。</p>'); return; }
+          var steps = [
+            ['开篇钩子', paras.slice(0, Math.max(1, Math.ceil(paras.length * 0.2))).length + ' 段', '场景切入 + 悬念抛出'],
+            ['冲突推进', Math.max(1, Math.ceil(paras.length * 0.35)) + ' 段', '矛盾升级、信息揭示'],
+            ['高潮对决', Math.max(1, Math.ceil(paras.length * 0.25)) + ' 段', '最强冲突爆发点'],
+            ['收尾留钩', Math.max(1, Math.floor(paras.length * 0.2)) + ' 段', '情绪落地 + 下一章钩子']
+          ];
+          var html = '<p style="font-weight:700;">《' + currentChapter.title + '》章节结构</p><ul>' +
+            steps.map(function (s) { return '<li><span class="r-tag r-ok">' + s[0] + '</span><strong>' + s[1] + '</strong> · ' + s[2] + '</li>'; }).join('') +
+            '</ul><p>建议：高潮部分占比可提到 30%，结尾保留一个未解决的悬念，衔接下一章。</p>';
+          openReport('AI 拆稿', html);
+        }
+
+        function aiReview() {
+          var paras = readParagraphs();
+          var total = RG.wordCount(paras.join('\n'));
+          var flags = [];
+          var text = paras.join('\n');
+          if (paras.length < 4) flags.push(['warn', '段落偏少（' + paras.length + ' 段），建议单章至少 8–12 段，阅读节奏更稳。']);
+          if (total < 500) flags.push(['warn', '字数偏少（' + total + ' 字），网文单章建议 2000 字以上。']);
+          if (total > 6000) flags.push(['warn', '字数偏多（' + total + ' 字），建议拆分为两章。']);
+          var badWords = ['然后', '忽然', '突然', '仿佛', '顿时'];
+          badWords.forEach(function (w) {
+            var n = text.split(w).length - 1;
+            if (n >= 3) flags.push(['bad', '「' + w + '」出现 ' + n + ' 次，高频重复词，建议替换或删除 ' + (n - 1) + ' 处。']);
+          });
+          var ok = flags.length ? [] : ['文风流畅，节奏合适，未发现明显问题。'];
+          var html = '<ul>' +
+            flags.map(function (f) { return '<li><span class="r-tag ' + (f[0] === 'bad' ? 'r-bad' : 'r-warn') + '">' + (f[0] === 'bad' ? '需修改' : '建议') + '</span>' + f[1] + '</li>'; }).join('') +
+            ok.map(function (o) { return '<li><span class="r-tag r-ok">通过</span>' + o + '</li>'; }).join('') +
+            '</ul><p>本章共 ' + paras.length + ' 段 / ' + total + ' 字。</p>';
+          openReport('AI 审稿', html);
+        }
+
+        function aiFix() {
+          var paras = readParagraphs();
+          if (!paras.length) { openReport('AI 纠错', '<p>当前章节还没有正文。</p>'); return; }
+          var rules = [
+            [/的地得/g, '的'],
+            [/（\s*）/g, ''],
+            [/\s{2,}/g, ' '],
+            [/，，/g, '，'],
+            [/。。/g, '。']
+          ];
+          var fixed = paras.map(function (p) { return p.replace(/[的地得]{1}/g, function (m) { return m === '得' ? '的' : m; }); });
+          var changed = 0;
+          var changedText = paras.map(function (p, i) {
+            var np = fixed[i];
+            if (np !== p) changed++;
+            return np;
+          });
+          canvasBody.innerHTML = '';
+          changedText.forEach(function (t) {
+            var el = document.createElement('p');
+            el.textContent = t;
+            canvasBody.appendChild(el);
+          });
+          countWords();
+          save(true);
+          openReport('AI 纠错', changed > 0
+            ? '<p><span class="r-tag r-ok">完成</span>共修正 ' + changed + ' 处常见错误（叠字、冗余空格、误用"得"等）。</p>'
+            : '<p><span class="r-tag r-ok">检查通过</span>未发现常见错别字与标点问题。</p>');
+        }
+
+        function aiDeai() {
+          var paras = readParagraphs();
+          var text = paras.join('\n');
+          var suspects = [['仿佛', 1], ['好像', 1], ['宛如', 1], ['刹那间', 1], ['顿时', 1], ['不禁', 1]];
+          var hits = suspects.filter(function (s) { return text.indexOf(s[0]) > -1; });
+          var html = '<p><strong>AI 痕迹检测</strong></p>';
+          if (!hits.length) {
+            html += '<p><span class="r-tag r-ok">干净</span>未检测到高频 AI 套话，可放心发布。</p>';
+          } else {
+            html += '<ul>' + hits.map(function (h) {
+              var n = text.split(h[0]).length - 1;
+              return '<li><span class="r-tag r-warn">' + h[0] + ' × ' + n + '</span>建议替换为具体动作或场景描写。</li>';
+            }).join('') + '</ul>' +
+            '<p>去痕技巧：把修饰性套话换成「动作 + 感官 + 心理」的具体描写，语气更贴近人类作者。</p>';
+          }
+          openReport('AI 去痕', html);
+        }
+
+        var aiActions = { write: openAiWrite, draft: aiDraft, review: aiReview, fix: aiFix, deai: aiDeai };
+        document.querySelectorAll('[data-ai]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var fn = aiActions[b.dataset.ai];
+            if (fn) fn();
+          });
+        });
+
+        // —— 更多菜单 ——
+        var moreBtn = document.getElementById('more-btn');
+        var moreMenu = document.getElementById('more-menu');
+        function closeMore() { moreMenu.hidden = true; moreBtn.setAttribute('aria-expanded', 'false'); }
+        moreBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var open = moreMenu.hidden;
+          moreMenu.hidden = !open;
+          moreBtn.setAttribute('aria-expanded', String(open));
+        });
+        document.addEventListener('click', function (e) {
+          if (!moreMenu.hidden && !moreMenu.contains(e.target) && e.target !== moreBtn) closeMore();
+        });
+        document.querySelectorAll('[data-more]').forEach(function (b) {
+          b.addEventListener('click', function () { closeMore(); handleMore(b.dataset.more); });
+        });
+
+        function handleMore(action) {
+          if (action === '作品信息') openInfo();
+          else if (action === '角色库') openLib('char');
+          else if (action === '词条库') openLib('term');
+          else if (action === '信息库') openLibrary();
+          else if (action === '作品导出') exportBook();
+          else if (action === '删除作品') deleteBook();
+        }
+
+        // 作品信息
+        var infoDialog = document.getElementById('info-dialog');
+        var allTypes = ['东方玄幻', '现代都市', '未来科幻', '悬疑推理', '古风仙侠', '浪漫爱情', '青春校园', '赛博朋克', '西方魔幻'];
+        function openInfo() {
+          document.getElementById('wi-title').value = book.title;
+          document.getElementById('wi-kind').value = book.kind;
+          document.getElementById('wi-type').innerHTML = allTypes.map(function (t) { return '<option value="' + t + '"' + (t === book.type ? ' selected' : '') + '>' + t + '</option>'; }).join('');
+          document.getElementById('wi-intro').value = book.intro || '';
+          infoDialog.showModal();
+        }
+        document.getElementById('wi-cancel').addEventListener('click', function () { infoDialog.close(); });
+        document.getElementById('info-form').addEventListener('submit', function (e) {
+          e.preventDefault();
+          book.title = document.getElementById('wi-title').value.trim() || book.title;
+          book.kind = document.getElementById('wi-kind').value;
+          book.type = document.getElementById('wi-type').value;
+          book.intro = document.getElementById('wi-intro').value.trim();
+          book.updatedAt = RG.nowText();
+          persist();
+          infoDialog.close();
+          renderBody();
+          saveOk.hidden = false;
+          setTimeout(function () { saveOk.hidden = true; }, 2000);
+        });
+
+        // 角色库 / 词条库
+        var charDialog = document.getElementById('char-dialog');
+        var termDialog = document.getElementById('term-dialog');
+        function openLib(kind) {
+          if (kind === 'char') { renderLib('char'); charDialog.showModal(); }
+          else { renderLib('term'); termDialog.showModal(); }
+        }
+        function renderLib(kind) {
+          var isChar = kind === 'char';
+          var list = isChar ? (book.characters || []) : (book.terms || []);
+          var el = document.getElementById(isChar ? 'char-list' : 'term-list');
+          el.innerHTML = '';
+          if (!list.length) {
+            var li = document.createElement('li');
+            li.className = 'lib-empty';
+            li.textContent = isChar ? '还没有角色，添加第一个吧。' : '还没有词条，添加第一个吧。';
+            el.appendChild(li);
+            return;
+          }
+          list.forEach(function (item, idx) {
+            var li = document.createElement('li');
+            li.className = 'lib-item';
+            li.innerHTML =
+              '<div class="li-main">' +
+                '<span class="li-name">' + item.name + '</span>' +
+                (isChar && item.role ? '<span class="li-role">' + item.role + '</span>' : '') +
+                '<div class="li-desc">' + (item.desc || '') + '</div>' +
+              '</div>' +
+              '<button class="btn btn-ghost btn-sm" type="button" data-rm="' + idx + '">删除</button>';
+            el.appendChild(li);
+          });
+          el.querySelectorAll('[data-rm]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              list.splice(Number(b.dataset.rm), 1);
+              persist();
+              renderLib(kind);
+            });
+          });
+        }
+        document.getElementById('char-cancel').addEventListener('click', function () { charDialog.close(); });
+        document.getElementById('term-cancel').addEventListener('click', function () { termDialog.close(); });
+        document.getElementById('char-form').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = document.getElementById('char-name').value.trim();
+          if (!name) return;
+          book.characters = book.characters || [];
+          book.characters.push({ name: name, role: document.getElementById('char-role').value.trim(), desc: document.getElementById('char-desc').value.trim() });
+          persist();
+          document.getElementById('char-name').value = '';
+          document.getElementById('char-role').value = '';
+          document.getElementById('char-desc').value = '';
+          renderLib('char');
+        });
+        document.getElementById('term-form').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = document.getElementById('term-name').value.trim();
+          if (!name) return;
+          book.terms = book.terms || [];
+          book.terms.push({ name: name, desc: document.getElementById('term-desc').value.trim() });
+          persist();
+          document.getElementById('term-name').value = '';
+          document.getElementById('term-desc').value = '';
+          renderLib('term');
+        });
+
+        // —— 信息库（角色/功法/地名/剧情线/金句/设定/章纲）——
+        var libDialog = document.getElementById('lib-dialog');
+        var LIB_SECTIONS = [
+          { key: 'characters', title: '角色库', role: true, empty: '还没有角色，可在角色库或此处添加。' },
+          { key: 'skills', title: '功法/能力库', role: false, empty: '还没有功法，可在此添加。' },
+          { key: 'places', title: '地名库', role: false, empty: '还没有地名，可在此添加。' },
+          { key: 'storylines', title: '剧情故事线', role: false, empty: '还没有剧情线，可在此添加。' },
+          { key: 'quotes', title: '金句', role: false, empty: '还没有金句，可在此添加。' },
+          { key: 'settings', title: '设定', role: false, empty: '还没有设定，可在此添加。' },
+          { key: 'chapterOutlines', title: '章纲', role: false, empty: '还没有章纲，可在此添加。' }
+        ];
+        function libraryItems(sec) {
+          if (sec.key === 'characters') { book.characters = book.characters || []; return book.characters; }
+          RG.ensureLibrary(book);
+          book.library[sec.key] = book.library[sec.key] || [];
+          return book.library[sec.key];
+        }
+        function openLibrary() {
+          renderLibrary();
+          libDialog.showModal();
+        }
+        function renderLibrary() {
+          var body = document.getElementById('lib-dlg-body');
+          body.innerHTML = '';
+          LIB_SECTIONS.forEach(function (sec) {
+            var items = libraryItems(sec);
+            var secEl = document.createElement('div');
+            secEl.className = 'lib-sec';
+            var title = document.createElement('div');
+            title.className = 'lib-sec-title';
+            title.textContent = sec.title;
+            var count = document.createElement('span');
+            count.className = 'lib-count';
+            count.textContent = items.length + ' 条';
+            title.appendChild(count);
+            secEl.appendChild(title);
+            var list = document.createElement('ul');
+            list.className = 'lib-list';
+            if (!items.length) {
+              var li = document.createElement('li');
+              li.className = 'lib-empty';
+              li.textContent = sec.empty;
+              list.appendChild(li);
+            } else {
+              items.forEach(function (item, idx) {
+                var li = document.createElement('li');
+                li.className = 'lib-item';
+                li.innerHTML =
+                  '<div class="li-main">' +
+                    '<span class="li-name"></span>' +
+                    (sec.role && item.role ? '<span class="li-role"></span>' : '') +
+                    '<div class="li-desc"></div>' +
+                  '</div>' +
+                  '<button class="btn btn-ghost btn-sm" type="button">删除</button>';
+                li.querySelector('.li-name').textContent = item.name || '';
+                if (sec.role && item.role) li.querySelector('.li-role').textContent = item.role;
+                li.querySelector('.li-desc').textContent = item.desc || '';
+                li.querySelector('button').addEventListener('click', function () {
+                  items.splice(idx, 1);
+                  persist();
+                  renderLibrary();
+                });
+                list.appendChild(li);
+              });
+            }
+            secEl.appendChild(list);
+            var form = document.createElement('form');
+            form.className = 'lib-add-form';
+            form.innerHTML = '<div class="row"></div>';
+            var row = form.querySelector('.row');
+            var name = document.createElement('input');
+            name.className = 'lib-name';
+            name.placeholder = sec.role ? '姓名' : '名称';
+            var roleInput = null;
+            if (sec.role) {
+              roleInput = document.createElement('input');
+              roleInput.className = 'lib-role';
+              roleInput.placeholder = '身份';
+            }
+            var desc = document.createElement('input');
+            desc.placeholder = sec.key === 'quotes' ? '金句内容' : sec.key === 'chapterOutlines' ? '章节要点' : '描述';
+            var add = document.createElement('button');
+            add.className = 'btn btn-primary btn-sm';
+            add.type = 'submit';
+            add.textContent = '+ 添加';
+            row.appendChild(name);
+            if (roleInput) row.appendChild(roleInput);
+            row.appendChild(desc);
+            row.appendChild(add);
+            form.addEventListener('submit', function (e) {
+              e.preventDefault();
+              var n = name.value.trim();
+              if (!n) return;
+              var item = { name: n, desc: desc.value.trim() };
+              if (sec.role) item.role = roleInput.value.trim();
+              items.push(item);
+              persist();
+              name.value = '';
+              if (roleInput) roleInput.value = '';
+              desc.value = '';
+              renderLibrary();
+            });
+            secEl.appendChild(form);
+            body.appendChild(secEl);
+          });
+        }
+        document.getElementById('lib-dlg-close').addEventListener('click', function () { libDialog.close(); });
+
+        // 作品导出
+        function exportBook() {
+          var lines = [];
+          lines.push(book.title);
+          lines.push('类型：' + book.kind + ' · ' + book.type);
+          lines.push('简介：' + (book.intro || '（无）'));
+          lines.push('');
+          (book.chapters || []).forEach(function (ch) {
+            lines.push('【' + ch.title + '】');
+            (ch.body || []).forEach(function (p) { lines.push(p); });
+            lines.push('');
+          });
+          var blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = book.title + '.txt';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+          saveOk.hidden = false;
+          setTimeout(function () { saveOk.hidden = true; }, 2000);
+        }
+
+        // 删除作品
+        function deleteBook() {
+          uiConfirm('确定将《' + book.title + '》移入回收站吗？可在书架「回收站」中恢复。', { yesText: '移入回收站', danger: true }, function () {
+            book.status = 'trash';
+            book.updatedAt = RG.nowText();
+            persist();
+            window.location.href = 'bookshelf.html';
+          });
+        }
+
+        // 章节搜索
+        document.getElementById('chapter-search').addEventListener('input', function (e) {
+          var q = e.target.value.trim();
+          listEl.querySelectorAll('.chapter-item').forEach(function (li) {
+            li.style.display = li.textContent.indexOf(q) > -1 ? '' : 'none';
+          });
+        });
+
+        // 初始化（仅当从未有过 chapters 字段时兜底补章；已存在 chapters 数组则尊重其状态，允许为空）
+        if (!currentChapter && !book.chapters) {
+          var first = RG.makeChapter(book.id, 1, '第一章', []);
+          book.chapters = book.chapters || [];
+          book.chapters.push(first);
+          persist();
+          currentChapter = first;
+        }
+        renderBody();
+
+        /* 从服务端备份恢复书架数据（本地为空或更旧时），恢复后重载页面以按 URL 重新渲染 */
+        if (window.RG && RG.restoreFromServer) {
+          RG.restoreFromServer(function (restored) { if (restored) location.reload(); });
+        }
+      })();
+    </script>
+  </body>
+</html>
