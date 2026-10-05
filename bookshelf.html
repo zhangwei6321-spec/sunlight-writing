@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="日光写作 —— 我的书架：新建/导入作品，管理章节，归档与回收站。" />
+    <title>我的书架 | 日光写作</title>
+    <link rel="stylesheet" href="./theme.css" />
+    <style>
+      /* 书架局部样式 */
+      .manage-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+      .manage-head h1 { margin: .25rem 0 0; font-size: 1.75rem; font-weight: 800; }
+      .manage-actions { display: flex; gap: .625rem; flex-wrap: wrap; }
+      .manage-tabs { display: flex; gap: .25rem; border-bottom: 1px solid var(--color-border); margin-bottom: 1rem; }
+      .tab { border: 0; background: none; padding: .625rem 1rem; font-size: .9375rem; font-weight: 600; color: var(--color-muted-text); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+      .tab:hover { color: var(--color-primary-deep); }
+      .tab.active { color: var(--color-primary-deep); border-bottom-color: var(--color-primary); }
+      .manage-bar { display: flex; gap: .625rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem; }
+      .manage-bar input[type="search"] { flex: 1; min-width: 12rem; }
+      .manage-bar select { min-width: 8rem; }
+      .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
+      .book-card { display: flex; gap: 1rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 1.125rem; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+      .book-card:hover { border-color: var(--color-primary); box-shadow: var(--shadow-pop); transform: translateY(-2px); }
+      .book-cover { width: 5.5rem; height: 7.5rem; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 1.375rem; letter-spacing: .12em; flex: none; box-shadow: 0 6px 16px rgba(31,26,21,.12); }
+      .book-info { flex: 1; min-width: 0; }
+      .book-title { font-weight: 700; font-size: 1.0625rem; margin: 0 0 .375rem; display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+      .tag { display: inline-flex; align-items: center; font-size: .75rem; font-weight: 600; padding: .125rem .5rem; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-deep); }
+      .tag.done { background: #ecfdf5; color: #047857; }
+      .tag.kind { background: #f1f5f9; color: #475569; }
+      .tag.arch { background: #fef3c7; color: #92400e; }
+      .book-meta { font-size: .8125rem; color: var(--color-muted-text); line-height: 1.7; }
+      .book-meta strong { color: var(--color-text); font-weight: 600; }
+      .book-actions { display: flex; gap: .5rem; margin-top: .875rem; flex-wrap: wrap; }
+      .btn-sm { padding: .375rem .875rem; font-size: .8125rem; }
+      .empty-hint { text-align: center; padding: 3.5rem 1rem; color: var(--color-muted-text); display: none; }
+      .empty-hint .btn { margin-top: 1rem; }
+      /* 弹窗 */
+      dialog { border: 0; border-radius: var(--radius-lg); padding: 1.5rem; width: min(26rem, 92vw); box-shadow: var(--shadow-pop); }
+      dialog::backdrop { background: rgba(31,26,21,.36); }
+      dialog h2 { margin: 0 0 1rem; font-size: 1.125rem; }
+      .dlg-form { display: flex; flex-direction: column; gap: .875rem; }
+      .dlg-form .field label { display: block; font-size: .8125rem; font-weight: 600; margin-bottom: .375rem; color: var(--color-primary-deep); }
+      .dlg-form .field input, .dlg-form .field select, .dlg-form .field textarea { width: 100%; box-sizing: border-box; }
+      .dlg-form .field textarea { min-height: 5rem; resize: vertical; }
+      .dlg-actions { display: flex; justify-content: flex-end; gap: .625rem; margin-top: .25rem; }
+      .hidden-file { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .btn-danger { background: #dc2626; color: #fff; }
+      .btn-danger:hover { background: #b91c1c; }
+      /* 新建作品：AI 信息库面板 */
+      dialog#new-dialog { width: min(46rem, 94vw); max-height: 88vh; overflow: auto; }
+      .lib-toggle { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: .625rem .875rem; background: var(--color-surface-soft); border: 1px dashed var(--color-primary); border-radius: 10px; color: var(--color-text); font-size: .875rem; font-weight: 600; cursor: pointer; }
+      .lib-toggle:hover { border-color: var(--color-primary); }
+      .lib-toggle-arrow { color: var(--color-primary); transition: transform .2s ease; }
+      .lib-hint { font-size: .8125rem; color: var(--color-muted-text); margin: .5rem 0 .75rem; line-height: 1.6; }
+      .lib-actions { display: flex; gap: .5rem; align-items: center; margin-bottom: .75rem; flex-wrap: wrap; }
+      .lib-loading { font-size: .8125rem; color: var(--color-muted-text); }
+      .lib-sec { border: 1px solid var(--color-border); border-radius: 10px; padding: .75rem; margin-bottom: .625rem; background: var(--color-surface); }
+      .lib-sec-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .5rem; flex-wrap: wrap; }
+      .lib-sec-title { font-weight: 700; font-size: .875rem; color: var(--color-primary-deep); }
+      .lib-sec-count { font-size: .75rem; color: var(--color-muted-text); }
+      .lib-sec-actions { display: flex; gap: .375rem; }
+      .lib-rows { display: flex; flex-direction: column; gap: .375rem; margin-bottom: .5rem; }
+      .lib-row { display: flex; gap: .375rem; align-items: center; }
+      .lib-row input { flex: 1; min-width: 0; padding: .375rem .5rem; font-size: .8125rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-text); }
+      .lib-row input.lib-name { flex: 0 0 8.5rem; font-weight: 600; }
+      .lib-row input.lib-role { flex: 0 0 5.5rem; }
+      .lib-row .btn { flex: none; }
+      .lib-add { display: flex; gap: .375rem; }
+      .lib-add input { flex: 1; min-width: 0; padding: .375rem .5rem; font-size: .8125rem; border: 1px dashed var(--color-border); border-radius: 6px; background: var(--color-surface); color: var(--color-text); }
+      .lib-empty-tip { font-size: .8125rem; color: var(--color-muted-text); padding: .25rem 0 .5rem; }
+    </style>
+  </head>
+  <body data-page-id="bookshelf">
+    <a class="skip-link" href="#main-content">跳转到主要内容</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="日光写作首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+          </span>
+          日光写作
+        </a>
+        <nav class="main-nav" aria-label="主导航">
+          <a href="bookshelf.html" aria-current="page">书架</a>
+          <a href="write.html">AI写作</a>
+          <a href="prompts.html">提示词库</a>
+          <a href="ai-short.html">AI短篇</a>
+          <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+        </nav>
+        <div class="header-actions">
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">菜单</button>
+          <a class="btn btn-primary" href="write.html">立即开始创作</a>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
+        <a href="bookshelf.html">书架</a>
+        <a href="write.html">AI写作</a>
+        <a href="prompts.html">提示词库</a>
+        <a href="ai-short.html">AI短篇</a>
+        <a href="tools.html">创意工具箱</a>
+        <a href="settings.html">设置</a>
+        <a class="btn btn-primary btn-block" href="write.html">立即开始创作</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <section class="section">
+        <div class="manage-head">
+          <div>
+            <span class="section-eyebrow">作品管理</span>
+            <h1>我的书架</h1>
+          </div>
+          <div class="manage-actions">
+            <button class="btn btn-ghost" type="button" id="import-btn">导入作品</button>
+            <button class="btn btn-primary" type="button" id="new-book-btn">+ 新建作品</button>
+          </div>
+        </div>
+
+        <div class="manage-tabs" role="tablist" aria-label="书架分区">
+          <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="active">作品 <span id="count-active">(0)</span></button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="archive">已归档</button>
+          <button class="tab" type="button" role="tab" aria-selected="false" data-tab="trash">回收站</button>
+        </div>
+
+        <div class="manage-bar">
+          <label class="sr-only" for="book-search">搜索作品</label>
+          <input id="book-search" type="search" placeholder="搜索作品名称、类型…" autocomplete="off" />
+          <label class="sr-only" for="kind-filter">筛选类型</label>
+          <select id="kind-filter">
+            <option value="all">全部类型</option>
+            <option value="小说">小说</option>
+            <option value="剧本">剧本</option>
+          </select>
+          <label class="sr-only" for="sort-order">排序方式</label>
+          <select id="sort-order">
+            <option value="time">最近更新</option>
+            <option value="words">字数最多</option>
+            <option value="created">创建时间</option>
+          </select>
+        </div>
+
+        <div class="book-grid" id="book-grid" aria-live="polite"></div>
+        <div class="empty-hint" id="empty-hint">
+          <p style="font-size:1.125rem;font-weight:600;color:var(--color-text);margin:0 0 .5rem;">这里还没有作品</p>
+          <p style="margin:0;">新建或导入一部作品，开始你的创作吧。</p>
+          <button class="btn btn-primary" type="button" id="empty-create">新建作品</button>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </span>
+            日光写作
+          </div>
+          <p class="footer-desc">数十万创作者选择的 AI 写作工具，专为网络小说、剧本创作者打造。</p>
+        </div>
+        <nav class="footer-nav" aria-label="页脚导航">
+          <div>
+            <h3>产品</h3>
+            <a href="bookshelf.html">书架</a>
+            <a href="write.html">AI写作</a>
+            <a href="write.html">AI续写</a>
+            <a href="write.html">AI扩写润色</a>
+          </div>
+          <div>
+            <h3>资源</h3>
+            <a href="prompts.html">提示词库</a>
+            <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+            <a href="tools.html">大纲生成器</a>
+            <a href="tools.html">人设生成器</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-bottom">© 2026 日光写作 · 让灵感永不枯竭</div>
+    </footer>
+
+    <!-- 新建作品弹窗 -->
+    <dialog id="new-dialog" aria-labelledby="new-dialog-title">
+      <h2 id="new-dialog-title">新建作品</h2>
+      <form class="dlg-form" id="new-form" aria-label="新建作品表单">
+        <div class="field">
+          <label for="nb-title">作品名称</label>
+          <input id="nb-title" type="text" placeholder="如：万古剑帝" required />
+        </div>
+        <div class="field">
+          <label for="nb-kind">作品类型</label>
+          <select id="nb-kind">
+            <option value="小说">小说</option>
+            <option value="剧本">剧本</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="nb-type">文风</label>
+          <select id="nb-type">
+            <option value="东方玄幻">东方玄幻</option>
+            <option value="现代都市">现代都市</option>
+            <option value="未来科幻">未来科幻</option>
+            <option value="悬疑推理">悬疑推理</option>
+            <option value="古风仙侠">古风仙侠</option>
+            <option value="浪漫爱情">浪漫爱情</option>
+            <option value="青春校园">青春校园</option>
+            <option value="赛博朋克">赛博朋克</option>
+            <option value="西方魔幻">西方魔幻</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="nb-intro">作品简介</label>
+          <textarea id="nb-intro" placeholder="一句话介绍你的故事…"></textarea>
+        </div>
+        <!-- AI 信息库（可选） -->
+        <div class="field">
+          <button type="button" class="lib-toggle" id="lib-toggle" aria-expanded="false" aria-controls="lib-panel">
+            <span>📚 AI 生成信息库（可选）</span>
+            <span class="lib-toggle-arrow" id="lib-toggle-arrow">▾</span>
+          </button>
+        </div>
+        <div class="lib-panel" id="lib-panel" hidden>
+          <p class="lib-hint">按当前文风自动生成角色库、功法库、地名、剧情故事线、金句、设定与章纲。可自由编辑、增删或换一批，随作品保存，正文写作时可随时参考。</p>
+          <div class="lib-actions">
+            <button class="btn btn-primary btn-sm" type="button" id="lib-gen-btn">✨ 生成信息库</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="lib-clear-btn" hidden>清空</button>
+            <span class="lib-loading" id="lib-loading" hidden>生成中…</span>
+          </div>
+          <div id="lib-result"></div>
+        </div>
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="new-cancel">取消</button>
+          <button class="btn btn-primary" type="submit">创建并开始写作</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- 作品信息弹窗 -->
+    <dialog id="info-dialog" aria-labelledby="info-dialog-title">
+      <h2 id="info-dialog-title">作品信息</h2>
+      <form class="dlg-form" id="info-form" aria-label="作品信息表单">
+        <div class="field">
+          <label for="ib-title">作品名称</label>
+          <input id="ib-title" type="text" required />
+        </div>
+        <div class="field">
+          <label for="ib-kind">作品类型</label>
+          <select id="ib-kind">
+            <option value="小说">小说</option>
+            <option value="剧本">剧本</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="ib-type">文风</label>
+          <select id="ib-type"></select>
+        </div>
+        <div class="field">
+          <label for="ib-status">状态</label>
+          <select id="ib-status">
+            <option value="active">连载中</option>
+            <option value="archive">已归档</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="ib-intro">作品简介</label>
+          <textarea id="ib-intro"></textarea>
+        </div>
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="info-cancel">取消</button>
+          <button class="btn btn-primary" type="submit">保存修改</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- 新建章节弹窗 -->
+    <dialog id="chapter-dialog" aria-labelledby="chapter-dialog-title">
+      <h2 id="chapter-dialog-title">新建章节</h2>
+      <form class="dlg-form" id="chapter-form" aria-label="新建章节表单">
+        <div class="field">
+          <label for="cb-name">章节名称</label>
+          <input id="cb-name" type="text" placeholder="如：第487章 初露锋芒" />
+        </div>
+        <p style="margin:.25rem 0 0;font-size:.8125rem;color:var(--color-muted-text);">创建后立即进入正文开始写作。</p>
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="chapter-cancel">取消</button>
+          <button class="btn btn-primary" type="submit">创建章节</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- 通用确认弹窗 -->
+    <dialog id="confirm-dialog" aria-labelledby="confirm-dialog-title">
+      <h2 id="confirm-dialog-title">确认操作</h2>
+      <p id="confirm-msg" style="margin:0 0 1.25rem;font-size:.9375rem;line-height:1.7;color:var(--color-text);"></p>
+      <div class="dlg-actions">
+        <button class="btn btn-ghost" type="button" id="confirm-no">取消</button>
+        <button class="btn btn-primary" type="button" id="confirm-yes">确定</button>
+      </div>
+    </dialog>
+
+    <!-- 通用输入弹窗 -->
+    <dialog id="prompt-dialog" aria-labelledby="prompt-dialog-title">
+      <h2 id="prompt-dialog-title">输入名称</h2>
+      <div class="dlg-form">
+        <div class="field">
+          <label for="prompt-input">请输入内容</label>
+          <input id="prompt-input" type="text" />
+        </div>
+        <div class="dlg-actions">
+          <button class="btn btn-ghost" type="button" id="prompt-cancel">取消</button>
+          <button class="btn btn-primary" type="button" id="prompt-ok">确定</button>
+        </div>
+      </div>
+    </dialog>
+
+    <input class="hidden-file" id="import-file" type="file" accept=".txt,text/plain" />
+
+    <script src="./assets/data.js"></script>
+    <script src="./assets/library-gen.js"></script>
+    <script>
+      (function () {
+        var toggle = document.querySelector('.menu-toggle');
+        var nav = document.getElementById('mobile-nav');
+        if (toggle && nav) {
+          toggle.addEventListener('click', function () {
+            var open = nav.style.display === 'flex';
+            nav.style.display = open ? 'none' : 'flex';
+            toggle.setAttribute('aria-expanded', String(!open));
+          });
+        }
+
+        // —— 网页风格弹窗（替代系统 confirm/alert/prompt）——
+        var confirmDlg = document.getElementById('confirm-dialog');
+        var confirmYes = document.getElementById('confirm-yes');
+        var confirmNo = document.getElementById('confirm-no');
+        var confirmMsg = document.getElementById('confirm-msg');
+        var promptDlg = document.getElementById('prompt-dialog');
+        var promptInput = document.getElementById('prompt-input');
+        var confirmCallback = null;
+        var promptCallback = null;
+        confirmYes.addEventListener('click', function () {
+          confirmDlg.close();
+          var cb = confirmCallback;
+          confirmCallback = null;
+          if (cb) cb();
+        });
+        confirmNo.addEventListener('click', function () {
+          confirmDlg.close();
+          confirmCallback = null;
+        });
+        function uiAlert(message) {
+          confirmMsg.textContent = message;
+          confirmYes.textContent = '知道了';
+          confirmYes.className = 'btn btn-primary';
+          confirmNo.style.display = 'none';
+          confirmCallback = null;
+          confirmDlg.showModal();
+        }
+        function uiConfirm(message, opts, onOk) {
+          if (typeof opts === 'function') { onOk = opts; opts = {}; }
+          opts = opts || {};
+          confirmMsg.textContent = message;
+          confirmYes.textContent = opts.yesText || '确定';
+          confirmYes.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+          confirmNo.style.display = '';
+          confirmNo.textContent = '取消';
+          confirmCallback = onOk || null;
+          confirmDlg.showModal();
+        }
+        function uiPrompt(message, defaultValue, onOk) {
+          document.getElementById('prompt-dialog-title').textContent = message;
+          promptInput.value = defaultValue || '';
+          promptCallback = onOk || null;
+          promptDlg.showModal();
+          promptInput.focus();
+        }
+        document.getElementById('prompt-ok').addEventListener('click', function () {
+          var v = promptInput.value.trim();
+          promptDlg.close();
+          var cb = promptCallback;
+          promptCallback = null;
+          if (v !== '' && cb) cb(v);
+        });
+        document.getElementById('prompt-cancel').addEventListener('click', function () {
+          promptDlg.close();
+          promptCallback = null;
+        });
+        promptInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('prompt-ok').click(); });
+
+        var state = { tab: 'active', q: '', kind: 'all', sort: 'time' };
+        var grid = document.getElementById('book-grid');
+        var empty = document.getElementById('empty-hint');
+        var editingBookId = null;   // 正在编辑/新建章节的作品
+        var editingBookIdInfo = null;
+
+        function w(n) { return n >= 10000 ? (n / 10000).toFixed(1) + '万' : String(n); }
+        function totalWords(book) {
+          var sum = 0;
+          (book.chapters || []).forEach(function (c) { sum += (c.words || 0); });
+          return sum;
+        }
+        function lastChapter(book) {
+          var cs = book.chapters || [];
+          return cs.length ? cs[cs.length - 1] : null;
+        }
+        function statusText(b) { return b.status === 'trash' ? '已删除' : (b.done ? '已完结' : (b.status === 'archive' ? '已归档' : '连载中')); }
+
+        function render() {
+          var d = RG.data();
+          var count = { active: 0, archive: 0, trash: 0 };
+          d.books.forEach(function (b) { count[b.status]++; });
+          document.getElementById('count-active').textContent = '(' + count.active + ')';
+          document.querySelectorAll('.tab').forEach(function (t) {
+            t.setAttribute('aria-selected', String(t.dataset.tab === state.tab));
+            t.classList.toggle('active', t.dataset.tab === state.tab);
+          });
+
+          var list = d.books.filter(function (b) {
+            if (b.status !== state.tab) return false;
+            if (state.kind !== 'all' && b.kind !== state.kind) return false;
+            if (state.q && (b.title + b.type + b.kind).indexOf(state.q) === -1) return false;
+            return true;
+          });
+          if (state.sort === 'words') list.sort(function (a, b) { return totalWords(b) - totalWords(a); });
+          else if (state.sort === 'created') list.sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+          else list.sort(function (a, b) { return (a.updatedAt || '') < (b.updatedAt || '') ? 1 : -1; });
+
+          grid.innerHTML = '';
+          if (!list.length) { empty.style.display = 'block'; return; }
+          empty.style.display = 'none';
+          list.forEach(function (b) {
+            var lc = lastChapter(b);
+            var ops;
+            if (state.tab === 'trash') {
+              ops = '<button class="btn btn-ghost btn-sm" type="button" data-restore="' + b.id + '">恢复</button><button class="btn btn-ghost btn-sm" type="button" data-purge="' + b.id + '">彻底删除</button>';
+            } else {
+              ops =
+                '<a class="btn btn-primary btn-sm" href="chapter.html?book=' + b.id + '&chapter=' + (lc ? lc.id : '') + '">继续写作</a>' +
+                '<button class="btn btn-ghost btn-sm" type="button" data-newchapter="' + b.id + '">新建章节</button>' +
+                '<button class="btn btn-ghost btn-sm" type="button" data-info="' + b.id + '">作品信息</button>' +
+                '<button class="btn btn-ghost btn-sm" type="button" data-archive="' + b.id + '">归档</button>';
+            }
+            var tagCls = b.status === 'archive' ? ' arch' : (b.done ? ' done' : '');
+            var card = document.createElement('article');
+            card.className = 'book-card';
+            card.setAttribute('aria-label', b.title + '，' + statusText(b));
+            card.innerHTML =
+              '<div class="book-cover" style="background:' + b.grad + '" aria-hidden="true">' + b.initial + '</div>' +
+              '<div class="book-info">' +
+                '<h3 class="book-title">' + b.title + '<span class="tag' + tagCls + '">' + statusText(b) + '</span><span class="tag kind">' + b.kind + '</span></h3>' +
+                '<div class="book-meta">' + b.type + ' · <strong>' + w(totalWords(b)) + '</strong> 字 · ' + (b.chapters || []).length + ' 章</div>' +
+                '<div class="book-meta">最新章节：' + (lc ? lc.title : '无') + '</div>' +
+                '<div class="book-meta">' + (b.updatedAt || b.createdAt) + ' 更新</div>' +
+                '<div class="book-actions">' + ops + '</div>' +
+              '</div>';
+            grid.appendChild(card);
+          });
+          grid.querySelectorAll('[data-info]').forEach(function (btn) { btn.addEventListener('click', function () { openInfo(b.id); }); });
+          grid.querySelectorAll('[data-newchapter]').forEach(function (btn) { btn.addEventListener('click', function () { openNewChapter(btn.dataset.newchapter); }); });
+          grid.querySelectorAll('[data-archive]').forEach(function (btn) { btn.addEventListener('click', function () { doArchive(btn.dataset.archive); }); });
+          grid.querySelectorAll('[data-restore]').forEach(function (btn) { btn.addEventListener('click', function () { doRestore(btn.dataset.restore); }); });
+          grid.querySelectorAll('[data-purge]').forEach(function (btn) { btn.addEventListener('click', function () { doPurge(btn.dataset.purge); }); });
+        }
+
+        // 新建作品
+        var newDialog = document.getElementById('new-dialog');
+        function openNew() {
+          document.getElementById('nb-title').value = '';
+          document.getElementById('nb-kind').value = '小说';
+          document.getElementById('nb-type').value = '东方玄幻';
+          document.getElementById('nb-intro').value = '';
+          newLib();
+          libPanel.hidden = true;
+          libToggle.setAttribute('aria-expanded', 'false');
+          libArrow.textContent = '▾';
+          newDialog.showModal();
+          document.getElementById('nb-title').focus();
+        }
+        document.getElementById('new-book-btn').addEventListener('click', openNew);
+        document.getElementById('empty-create').addEventListener('click', openNew);
+        document.getElementById('new-cancel').addEventListener('click', function () { newDialog.close(); });
+
+        // —— AI 信息库（新建作品时按文风生成，可编辑自定义）——
+        var libToggle = document.getElementById('lib-toggle');
+        var libPanel = document.getElementById('lib-panel');
+        var libArrow = document.getElementById('lib-toggle-arrow');
+        var libResult = document.getElementById('lib-result');
+        var libGenBtn = document.getElementById('lib-gen-btn');
+        var libClearBtn = document.getElementById('lib-clear-btn');
+        var libLoading = document.getElementById('lib-loading');
+        var libState = null;
+        var LIB_SECTIONS = [
+          { key: 'characters', title: '角色库', role: true, empty: '还没有角色，点击「生成信息库」或手动添加。' },
+          { key: 'skills', title: '功法/能力库', role: false, empty: '还没有功法，点击「生成信息库」或手动添加。' },
+          { key: 'places', title: '地名库', role: false, empty: '还没有地名，点击「生成信息库」或手动添加。' },
+          { key: 'storylines', title: '剧情故事线', role: false, empty: '还没有剧情线，点击「生成信息库」或手动添加。' },
+          { key: 'quotes', title: '金句', role: false, empty: '还没有金句，点击「生成信息库」或手动添加。' },
+          { key: 'settings', title: '设定', role: false, empty: '还没有设定，点击「生成信息库」或手动添加。' },
+          { key: 'chapterOutlines', title: '章纲', role: false, empty: '还没有章纲，点击「生成信息库」或手动添加。' }
+        ];
+        function newLib() {
+          libState = { characters: [], skills: [], places: [], storylines: [], quotes: [], settings: [], chapterOutlines: [] };
+          if (libResult) libResult.innerHTML = '';
+          if (libClearBtn) libClearBtn.hidden = true;
+        }
+        libToggle.addEventListener('click', function () {
+          var open = !libPanel.hidden;
+          libPanel.hidden = open;
+          libToggle.setAttribute('aria-expanded', String(!open));
+          libArrow.textContent = open ? '▸' : '▾';
+        });
+        function renderLib() {
+          if (!libState) return;
+          libResult.innerHTML = '';
+          LIB_SECTIONS.forEach(function (sec) {
+            var items = libState[sec.key];
+            var card = document.createElement('div');
+            card.className = 'lib-sec';
+            var head = document.createElement('div');
+            head.className = 'lib-sec-head';
+            var title = document.createElement('span');
+            title.className = 'lib-sec-title';
+            title.textContent = sec.title;
+            var count = document.createElement('span');
+            count.className = 'lib-sec-count';
+            count.textContent = items.length + ' 条';
+            var acts = document.createElement('div');
+            acts.className = 'lib-sec-actions';
+            var refresh = document.createElement('button');
+            refresh.className = 'btn btn-ghost btn-sm';
+            refresh.type = 'button';
+            refresh.textContent = '换一批';
+            refresh.addEventListener('click', function () { regenerateSection(sec.key); });
+            acts.appendChild(refresh);
+            var addBtn = document.createElement('button');
+            addBtn.className = 'btn btn-ghost btn-sm';
+            addBtn.type = 'button';
+            addBtn.textContent = '+ 新增';
+            addBtn.addEventListener('click', function () { showAddRow(sec, card); });
+            acts.appendChild(addBtn);
+            head.appendChild(title); head.appendChild(count); head.appendChild(acts);
+            card.appendChild(head);
+            if (!items.length) {
+              var tip = document.createElement('div');
+              tip.className = 'lib-empty-tip';
+              tip.textContent = sec.empty;
+              card.appendChild(tip);
+            } else {
+              var rows = document.createElement('div');
+              rows.className = 'lib-rows';
+              items.forEach(function (item, idx) { rows.appendChild(buildRow(sec, item, idx)); });
+              card.appendChild(rows);
+            }
+            libResult.appendChild(card);
+          });
+          libClearBtn.hidden = false;
+        }
+        function buildRow(sec, item, idx) {
+          var row = document.createElement('div');
+          row.className = 'lib-row';
+          var name = document.createElement('input');
+          name.className = 'lib-name';
+          name.type = 'text';
+          name.value = item.name || '';
+          name.placeholder = '名称';
+          name.addEventListener('input', function () { item.name = name.value.trim(); });
+          var roleInput = null;
+          if (sec.role) {
+            roleInput = document.createElement('input');
+            roleInput.className = 'lib-role';
+            roleInput.type = 'text';
+            roleInput.value = item.role || '';
+            roleInput.placeholder = '身份';
+            roleInput.addEventListener('input', function () { item.role = roleInput.value.trim(); });
+          }
+          var desc = document.createElement('input');
+          desc.type = 'text';
+          desc.value = item.desc || '';
+          desc.placeholder = sec.key === 'quotes' ? '金句内容' : sec.key === 'chapterOutlines' ? '章节要点' : '描述';
+          desc.addEventListener('input', function () { item.desc = desc.value.trim(); });
+          var del = document.createElement('button');
+          del.className = 'btn btn-ghost btn-sm';
+          del.type = 'button';
+          del.textContent = '删';
+          del.addEventListener('click', function () {
+            libState[sec.key].splice(idx, 1);
+            renderLib();
+          });
+          row.appendChild(name);
+          if (roleInput) row.appendChild(roleInput);
+          row.appendChild(desc);
+          row.appendChild(del);
+          return row;
+        }
+        function showAddRow(sec, card) {
+          var wrap = document.createElement('div');
+          wrap.className = 'lib-add';
+          var name = document.createElement('input');
+          name.className = 'lib-name';
+          name.placeholder = sec.role ? '姓名' : '名称';
+          var roleInput = null;
+          if (sec.role) {
+            roleInput = document.createElement('input');
+            roleInput.className = 'lib-role';
+            roleInput.placeholder = '身份';
+          }
+          var desc = document.createElement('input');
+          desc.placeholder = '描述';
+          var ok = document.createElement('button');
+          ok.className = 'btn btn-primary btn-sm';
+          ok.type = 'button';
+          ok.textContent = '添加';
+          var cancel = document.createElement('button');
+          cancel.className = 'btn btn-ghost btn-sm';
+          cancel.type = 'button';
+          cancel.textContent = '取消';
+          function commit() {
+            var n = name.value.trim();
+            if (!n) return;
+            var item = { name: n, desc: desc.value.trim() };
+            if (sec.role) item.role = roleInput.value.trim();
+            libState[sec.key].push(item);
+            wrap.remove();
+            renderLib();
+          }
+          ok.addEventListener('click', commit);
+          cancel.addEventListener('click', function () { wrap.remove(); });
+          name.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+          wrap.appendChild(name);
+          if (roleInput) wrap.appendChild(roleInput);
+          wrap.appendChild(desc);
+          wrap.appendChild(ok);
+          wrap.appendChild(cancel);
+          card.appendChild(wrap);
+          name.focus();
+        }
+        function regenerateSection(key) {
+          var full = LibGen.gen(document.getElementById('nb-type').value);
+          libState[key] = full[key] || [];
+          renderLib();
+        }
+        libGenBtn.addEventListener('click', function () {
+          libGenBtn.disabled = true;
+          libLoading.hidden = false;
+          setTimeout(function () {
+            libState = LibGen.gen(document.getElementById('nb-type').value);
+            libLoading.hidden = true;
+            libGenBtn.disabled = false;
+            renderLib();
+          }, 700);
+        });
+        libClearBtn.addEventListener('click', newLib);
+
+        document.getElementById('new-form').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var title = document.getElementById('nb-title').value.trim();
+          if (!title) return;
+          var d = RG.data();
+          var initial = title.charAt(0);
+          var grads = ['linear-gradient(135deg,#f97316,#f59e0b)', 'linear-gradient(135deg,#3b82f6,#06b6d4)', 'linear-gradient(135deg,#8b5cf6,#6366f1)', 'linear-gradient(135deg,#ec4899,#f43f5e)', 'linear-gradient(135deg,#10b981,#14b8a6)'];
+          var lib = libState;
+          var book = {
+            id: RG.uid('b'), title: title,
+            kind: document.getElementById('nb-kind').value,
+            type: document.getElementById('nb-type').value,
+            status: 'active', done: false,
+            intro: document.getElementById('nb-intro').value.trim(),
+            grad: grads[d.books.length % grads.length], initial: initial,
+            createdAt: RG.nowText(), updatedAt: RG.nowText(),
+            characters: lib && lib.characters ? lib.characters : [],
+            terms: [],
+            library: lib ? {
+              skills: lib.skills || [], places: lib.places || [], storylines: lib.storylines || [],
+              quotes: lib.quotes || [], settings: lib.settings || [], chapterOutlines: lib.chapterOutlines || []
+            } : RG.emptyLibrary(),
+            chapters: []
+          };
+          book.chapters.push(RG.makeChapter(book.id, 1, '第一章 开局', []));
+          d.books.unshift(book);
+          RG.save(d);
+          newDialog.close();
+          render();
+          window.location.href = 'chapter.html?book=' + book.id + '&chapter=' + book.chapters[0].id;
+        });
+
+        // 新建章节
+        var chapterDialog = document.getElementById('chapter-dialog');
+        function openNewChapter(bookId) {
+          editingBookId = bookId;
+          var d = RG.data();
+          var b = d.books.filter(function (x) { return x.id === bookId; })[0];
+          var nextNo = (b.chapters || []).length + 1;
+          document.getElementById('chapter-dialog-title').textContent = '新建章节 · ' + b.title;
+          document.getElementById('cb-name').value = '第' + nextNo + '章 ';
+          chapterDialog.showModal();
+          document.getElementById('cb-name').focus();
+        }
+        document.getElementById('chapter-cancel').addEventListener('click', function () { chapterDialog.close(); });
+        document.getElementById('chapter-form').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var name = document.getElementById('cb-name').value.trim();
+          if (!editingBookId) return;
+          var d = RG.data();
+          var b = d.books.filter(function (x) { return x.id === editingBookId; })[0];
+          var nextNo = (b.chapters || []).length + 1;
+          var ch = RG.makeChapter(b.id, nextNo, name || ('第' + nextNo + '章'), []);
+          b.chapters.push(ch);
+          b.updatedAt = RG.nowText();
+          RG.save(d);
+          chapterDialog.close();
+          window.location.href = 'chapter.html?book=' + b.id + '&chapter=' + ch.id;
+        });
+
+        // 作品信息编辑
+        var infoDialog = document.getElementById('info-dialog');
+        function openInfo(bookId) {
+          editingBookIdInfo = bookId;
+          var d = RG.data();
+          var b = d.books.filter(function (x) { return x.id === bookId; })[0];
+          if (!b) return;
+          document.getElementById('ib-title').value = b.title;
+          document.getElementById('ib-kind').value = b.kind;
+          var typeSel = document.getElementById('ib-type');
+          var allTypes = ['东方玄幻', '现代都市', '未来科幻', '悬疑推理', '古风仙侠', '浪漫爱情', '青春校园', '赛博朋克', '西方魔幻'];
+          typeSel.innerHTML = allTypes.map(function (t) { return '<option value="' + t + '"' + (t === b.type ? ' selected' : '') + '>' + t + '</option>'; }).join('');
+          document.getElementById('ib-status').value = b.status === 'archive' ? 'archive' : 'active';
+          document.getElementById('ib-intro').value = b.intro || '';
+          infoDialog.showModal();
+        }
+        document.getElementById('info-cancel').addEventListener('click', function () { infoDialog.close(); });
+        document.getElementById('info-form').addEventListener('submit', function (e) {
+          e.preventDefault();
+          if (!editingBookIdInfo) return;
+          var d = RG.data();
+          var b = d.books.filter(function (x) { return x.id === editingBookIdInfo; })[0];
+          if (!b) return;
+          b.title = document.getElementById('ib-title').value.trim() || b.title;
+          b.kind = document.getElementById('ib-kind').value;
+          b.type = document.getElementById('ib-type').value;
+          b.status = document.getElementById('ib-status').value;
+          b.intro = document.getElementById('ib-intro').value.trim();
+          b.updatedAt = RG.nowText();
+          RG.save(d);
+          infoDialog.close();
+          render();
+        });
+
+        // 归档 / 恢复 / 彻底删除
+        function doArchive(bookId) {
+          uiConfirm('确定将该作品归档吗？归档后可在「已归档」中找回。', function () {
+            var d = RG.data();
+            var b = d.books.filter(function (x) { return x.id === bookId; })[0];
+            if (b) { b.status = 'archive'; b.updatedAt = RG.nowText(); RG.save(d); render(); }
+          });
+        }
+        function doRestore(bookId) {
+          var d = RG.data();
+          var b = d.books.filter(function (x) { return x.id === bookId; })[0];
+          if (b) { b.status = 'active'; b.updatedAt = RG.nowText(); RG.save(d); render(); }
+        }
+        function doPurge(bookId) {
+          uiConfirm('彻底删除后无法恢复，确定删除该作品吗？', { yesText: '彻底删除', danger: true }, function () {
+            var d = RG.data();
+            d.books = d.books.filter(function (x) { return x.id !== bookId; });
+            RG.save(d);
+            render();
+          });
+        }
+
+        // 删除（进回收站）
+        grid.addEventListener('click', function (e) {
+          var delBtn = e.target.closest('[data-del]');
+          if (!delBtn) return;
+          var bookId = delBtn.dataset.del;
+          uiConfirm('确定将作品移入回收站吗？可在回收站中恢复。', function () {
+            var d = RG.data();
+            var b = d.books.filter(function (x) { return x.id === bookId; })[0];
+            if (b) { b.status = 'trash'; b.updatedAt = RG.nowText(); RG.save(d); render(); }
+          });
+        });
+
+        // 导入作品
+        var importFile = document.getElementById('import-file');
+        document.getElementById('import-btn').addEventListener('click', function () { importFile.click(); });
+        importFile.addEventListener('change', function () {
+          var file = importFile.files && importFile.files[0];
+          if (!file) return;
+          var reader = new FileReader();
+          reader.onload = function (ev) {
+            var text = String(ev.target.result || '').trim();
+            var base = file.name.replace(/\.txt$/i, '') || '导入作品';
+            uiPrompt('导入作品《' + base + '》，请输入作品名称：', base, function (title) {
+              var d = RG.data();
+              var grads = ['linear-gradient(135deg,#f97316,#f59e0b)', 'linear-gradient(135deg,#3b82f6,#06b6d4)', 'linear-gradient(135deg,#8b5cf6,#6366f1)', 'linear-gradient(135deg,#ec4899,#f43f5e)', 'linear-gradient(135deg,#10b981,#14b8a6)'];
+              var book = {
+                id: 'b' + RG.uid(), title: title, kind: '小说', type: '现代都市', status: 'active', done: false,
+                intro: '从文件导入的作品', grad: grads[d.books.length % grads.length], initial: title.charAt(0),
+                createdAt: RG.nowText(), updatedAt: RG.nowText(), characters: [], terms: [], chapters: []
+              };
+              var paras = text.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean);
+              book.chapters.push(RG.makeChapter(book.id, 1, '第一章', paras.length ? paras : ['（导入内容为空）']));
+              d.books.unshift(book);
+              RG.save(d);
+              importFile.value = '';
+              render();
+              window.location.href = 'chapter.html?book=' + book.id + '&chapter=' + book.chapters[0].id;
+            });
+          };
+          reader.readAsText(file, 'utf-8');
+        });
+
+        // 标签/搜索/筛选/排序
+        document.querySelectorAll('.tab').forEach(function (t) {
+          t.addEventListener('click', function () { state.tab = t.dataset.tab; render(); });
+        });
+        document.getElementById('book-search').addEventListener('input', function (e) { state.q = e.target.value.trim(); render(); });
+        document.getElementById('kind-filter').addEventListener('change', function (e) { state.kind = e.target.value; render(); });
+        document.getElementById('sort-order').addEventListener('change', function (e) { state.sort = e.target.value; render(); });
+
+        render();
+
+        /* 从服务端备份恢复书架数据（本地为空或更旧时），恢复后重渲染 */
+        if (window.RG && RG.restoreFromServer) {
+          RG.restoreFromServer(function (restored) { if (restored) render(); });
+        }
+      })();
+    </script>
+  </body>
+</html>

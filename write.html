@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="日光写作 AI 工作台 —— 写作、续写、扩写润色、拆书，四合一创作助手。" />
+    <title>AI写作工作台 | 日光写作</title>
+    <link rel="stylesheet" href="./theme.css" />
+  </head>
+  <body data-page-id="write">
+    <a class="skip-link" href="#main-content">跳转到主要内容</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="index.html" aria-label="日光写作首页">
+          <span class="brand-mark" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+          </span>
+          日光写作
+        </a>
+        <nav class="main-nav" aria-label="主导航">
+          <a href="bookshelf.html">书架</a>
+          <a href="write.html" aria-current="page">AI写作</a>
+          <a href="prompts.html">提示词库</a>
+          <a href="ai-short.html">AI短篇</a>
+          <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+        </nav>
+        <div class="header-actions">
+          <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav">菜单</button>
+          <a class="btn btn-primary" href="write.html">立即开始创作</a>
+        </div>
+      </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
+        <a href="bookshelf.html">书架</a>
+        <a href="write.html">AI写作</a>
+        <a href="prompts.html">提示词库</a>
+        <a href="ai-short.html">AI短篇</a>
+        <a href="tools.html">创意工具箱</a>
+        <a href="settings.html">设置</a>
+        <a class="btn btn-primary btn-block" href="write.html">立即开始创作</a>
+      </nav>
+    </header>
+    <main id="main-content" tabindex="-1">
+      <script>
+        (function () {
+          var toggle = document.querySelector('.menu-toggle');
+          var nav = document.getElementById('mobile-nav');
+          if (toggle && nav) {
+            toggle.addEventListener('click', function () {
+              var open = nav.style.display === 'flex';
+              nav.style.display = open ? 'none' : 'flex';
+              toggle.setAttribute('aria-expanded', String(!open));
+            });
+          }
+        })();
+      </script>
+
+      <section class="workbench" data-anchor-id="write.workbench">
+        <div class="workbench-inner">
+          <!-- 左侧设置 -->
+          <aside class="side-panel" aria-label="创作设置">
+            <div class="card">
+              <h2 class="panel-title">创作模式</h2>
+              <div class="mode-list" role="group" aria-label="创作模式">
+                <button class="mode-btn" type="button" data-mode="write" aria-pressed="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                  AI写作
+                </button>
+                <button class="mode-btn" type="button" data-mode="continue" aria-pressed="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/></svg>
+                  AI续写
+                </button>
+                <button class="mode-btn" type="button" data-mode="polish" aria-pressed="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>
+                  AI扩写润色
+                </button>
+                <button class="mode-btn" type="button" data-mode="analyze" aria-pressed="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+                  AI拆书
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2 class="panel-title">创作参数</h2>
+              <div class="field">
+                <label for="style-select">写作风格</label>
+                <select id="style-select">
+                  <option>古风仙侠</option>
+                  <option>现代都市</option>
+                  <option>未来科幻</option>
+                  <option>奇幻冒险</option>
+                  <option>悬疑推理</option>
+                  <option>历史架空</option>
+                  <option>浪漫爱情</option>
+                  <option>青春校园</option>
+                  <option>赛博朋克</option>
+                  <option>蒸汽朋克</option>
+                  <option>西方魔幻</option>
+                  <option>东方玄幻</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="model-select">AI 模型</label>
+                <select id="model-select">
+                  <option>日光·文曲（旗舰）</option>
+                  <option>日光·灵犀（快速）</option>
+                  <option>日光·妙笔（剧情）</option>
+                  <option>日光·惊鸿（文风）</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="length-select">目标字数</label>
+                <select id="length-select">
+                  <option>短篇（约 8000-20000 字）</option>
+                  <option>中篇（约 20000-200000 字）</option>
+                  <option>长篇（200000 字以上）</option>
+                  <option>不限</option>
+                </select>
+              </div>
+              <p style="margin:0;font-size:.8125rem;color:var(--color-muted-text);">当前为演示模式，AI 回复由本地模拟生成，后续可接入真实大模型 API。</p>
+            </div>
+          </aside>
+
+          <!-- 右侧对话区 -->
+          <div class="chat-panel">
+            <div class="chat-head">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C7.03 3 3 6.58 3 11c0 2.42 1.21 4.6 3.12 6.06-.13.89-.54 1.93-1.62 2.86 0 0 .92-.06 2.43-.68.74.31 1.56.51 2.44.62.53.07 1.08.1 1.63.1 4.97 0 9-3.58 9-8s-4.03-8-9-8z"/></svg>
+              <span id="chat-title">AI 写作</span>
+              <span style="flex:1"></span>
+              <span id="save-ok" hidden style="font-size:.8125rem;color:var(--color-success);font-weight:600;">已保存 ✓</span>
+              <button class="btn btn-ghost" type="button" id="save-btn" style="padding:.375rem .875rem;font-size:.8125rem;">保存</button>
+              <button class="btn btn-ghost" type="button" id="export-btn" style="padding:.375rem .875rem;font-size:.8125rem;">导出</button>
+            </div>
+            <div class="chat-body" id="chat-body" data-state="default" aria-live="polite">
+              <div class="chat-empty" id="chat-empty">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                <p>输入您的创作想法，或粘贴已有内容，<br />AI 将根据您选择的模式与风格生成内容。</p>
+              </div>
+            </div>
+            <div class="chat-input-bar" style="flex-direction:column;gap:.625rem;">
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;" aria-label="快捷灵感">
+                <span style="font-size:.8125rem;color:var(--color-muted-text);">快捷灵感：</span>
+                <button class="chip" type="button" data-quick="主角在悬崖边捡到一枚会说话的玉佩，从此命运逆转">主角奇遇</button>
+                <button class="chip" type="button" data-quick="写一段主角与反派的第一次正面交锋">正面对决</button>
+                <button class="chip" type="button" data-quick="主角金手指觉醒的瞬间，描写他的震惊与野心">金手指觉醒</button>
+                <button class="chip" type="button" data-quick="深夜雨巷，主角发现了一个本不该存在的秘密">悬疑伏笔</button>
+              </div>
+              <div style="display:flex;gap:.75rem;align-items:flex-end;">
+                <label class="sr-only" for="chat-input" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">输入创作内容</label>
+                <textarea id="chat-input" rows="2" placeholder="输入故事设定、情节、关键词，或粘贴需要续写/润色的文本……"></textarea>
+                <button class="btn btn-primary" type="button" id="send-btn">生成</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script>
+        (function () {
+          var MODE_META = {
+            write:    { title: 'AI 写作',     placeholder: '输入故事设定、情节、关键词，例如：少年获得金手指后逆袭' },
+            continue: { title: 'AI 续写',     placeholder: '粘贴您当前的章节内容，AI 将无缝接续您的思路' },
+            polish:   { title: 'AI 扩写润色', placeholder: '粘贴需要扩写或润色的文本，AI 将扩展内容并修饰句式' },
+            analyze:  { title: 'AI 拆书',     placeholder: '输入作品名称或粘贴片段，AI 将剖析结构与写作技巧' }
+          };
+
+          var OPENERS = {
+            '古风仙侠': '夜色如墨，万仞孤峰之上，一道身影负手而立。林尘望着山下翻涌的云海，指尖缓缓摩挲着那枚染血的古玉。三年前，他自宗门弃徒沦为废人；三年后，他携九转天功归来——这一次，他要让整个修仙界，记住他的名字。',
+            '现代都市': '凌晨三点，江城 CBD 的写字楼依旧灯火通明。沈修文合上最后一份文件，揉了揉发酸的眉心。手机屏幕忽然亮起，是一条没有署名的短信：「三年前的事，该了结了。」他握杯的手微微一紧，唇角却勾起一抹若有若无的笑。',
+            '未来科幻': '公元 2147 年，新纪元历法第 9 年。联邦舰队第三观察员韩澈盯着全息屏幕上不断跳动的异常数据，瞳孔骤然收缩——那个本应在八十年前毁灭的坐标，正在发出微弱的生命信号。',
+            '悬疑推理': '暴雨倾盆的深夜，北岸分局接到一通无声电话。接线员只听见听筒里传来规律的滴水声，一下，两下，三下……直到第十二下，一个沙哑的男声说：「第十二个受害者，已经出现了。」',
+            '奇幻冒险': '在艾泽大陆的最西端，有一座从不出现在任何地图上的小镇。旅人阿莱克斯推开门的那一刻，柜台后的老猫忽然睁开眼：「年轻人，你带来的那枚徽章，已经沉睡了三百年。」',
+            '历史架空': '大雍景和二十一年，长安城飘着细雪。谢家嫡女谢云澜跪在宫门前整整三个时辰，只为替蒙冤的父亲求一个公道。她不知道的是，这场大雪之后，整个帝国的命运都将因她而改写。',
+            '浪漫爱情': '江屿第一次见到顾晚，是在图书馆熄灯前的一分钟。她抱着一摞书跌跌撞撞地跑进来，发梢还沾着雨珠，抬头时撞进他眼底的那一瞬间，世界忽然安静得只剩下心跳。',
+            '青春校园': '高三（7）班的座位表贴在黑板旁边已经一周了，陆时迁却始终记不住自己后排那个总是趴在桌上睡觉的女孩叫什么。直到月考成绩出来，他盯着年级第一的名字看了很久——沈知夏，全校闻名的学霸，居然坐他后面。',
+            '赛博朋克': '霓虹浸透的九龙城，仿生雨燕贴着广告全息屏低空掠过。义体维修师老陈在铺子门口捡到一台报废的记忆存储器，里面有一段未加密的录像——录像的主角，是十年前就该死于事故的他自己。',
+            '蒸汽朋克': '帝国首都的钟楼刚刚敲响六下，埃德加就把最后一块黄铜齿轮装进飞行器。蒸汽从管道喷出，白雾弥漫了整个作坊。他看了眼怀表，距离博览会开幕还有二十四小时——足够他飞越半个城市，也足够皇家卫队追上他三次。',
+            '西方魔幻': '圣山脚下的白塔学院，每年只招收十二名学生。奥古斯汀·维尔拿到录取信的那天，信纸上的火漆封印竟自己裂开，露出里面一行用古精灵语写下的警告：不要相信校长。',
+            '东方玄幻': '青阳山下，杂役弟子叶青云正在劈柴。没人知道，他体内封印着上古麒麟的血脉。直到这一天，山门大比，首席弟子当众羞辱于他，那道封印终于裂开了一道缝。'
+          };
+
+          var FALLBACK_OPENER = '山雨欲来，风从旷野深处卷起。少年攥紧手中的信物，望着前方雾气弥漫的城门，他知道，踏出这一步，就再也没有回头的路了。';
+
+          var mode = 'write';
+          var styleEl = document.getElementById('style-select');
+          var modelEl = document.getElementById('model-select');
+          var lengthEl = document.getElementById('length-select');
+          var chatBody = document.getElementById('chat-body');
+          var chatEmpty = document.getElementById('chat-empty');
+          var chatTitle = document.getElementById('chat-title');
+          var inputEl = document.getElementById('chat-input');
+          var sendBtn = document.getElementById('send-btn');
+          var generating = false;
+          var activePrompt = null;
+          try { var rawP = localStorage.getItem('rgyw_active_prompt'); if (rawP) { activePrompt = JSON.parse(rawP); } } catch (e) { activePrompt = null; }
+
+          var GROUP_STYLE = {
+            '一、创作方法论': '东方玄幻',
+            '二、都市 · 现实题材': '现代都市',
+            '三、幻想 · 设定流': '未来科幻',
+            '四、古言 · 悬疑': '古风仙侠',
+            '五、女频情感': '浪漫爱情',
+            '六、平台与投稿': '现代都市'
+          };
+          var BODY_EXTRA = [
+            '他沿着记忆里那条早已模糊的小路往前走，路边的梧桐换了三茬新叶。旧书店还在，招牌褪了色，门缝里漏出一线昏黄的灯光。推门进去的瞬间，风铃叮当一响，仿佛时光倒流回许多年前的那个下午。',
+            '消息像长了翅膀一样传开。有人欢喜，有人惶恐，更多的人在观望。茶馆里的议论声压得很低，却掩不住暗流汹涌——这座平静了太久的城，终于要变天了。',
+            '他握紧拳头，指甲陷进掌心。不是没有犹豫过，只是有些路，一旦决定要走，就得咬着牙走到底。哪怕前方是深渊，他也要亲眼看看，深渊的尽头到底有什么。',
+            '真相远比想象中复杂。他翻遍所有的线索，发现每一个答案的背后都藏着新的问题，像俄罗斯套娃一样层层嵌套。而最深处那个秘密，竟与他最初寻找的东西截然相反。'
+          ];
+
+          function setMode(m) {
+            mode = m;
+            document.querySelectorAll('.mode-btn').forEach(function (b) {
+              b.setAttribute('aria-pressed', String(b.dataset.mode === m));
+            });
+            chatTitle.textContent = MODE_META[m].title;
+            inputEl.placeholder = MODE_META[m].placeholder;
+          }
+
+          document.querySelectorAll('.mode-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () { setMode(btn.dataset.mode); });
+          });
+
+          function escapeHtml(s) {
+            return s.replace(/[&<>\"]/g, function (c) {
+              return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[c];
+            });
+          }
+
+          function addMessage(role, text) {
+            if (chatEmpty) { chatEmpty.remove(); chatEmpty = null; }
+            var wrap = document.createElement('div');
+            wrap.className = 'message ' + role;
+            var avatar = role === 'user' ? '你' : '日';
+            wrap.innerHTML =
+              '<span class="message-avatar" aria-hidden="true">' + avatar + '</span>' +
+              '<div class="message-bubble"></div>';
+            wrap.querySelector('.message-bubble').textContent = text;
+            chatBody.appendChild(wrap);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            return wrap;
+          }
+
+          function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+          function mockReply(input) {
+            var style = styleEl.value;
+            var length = lengthEl.value;
+            var opener = OPENERS[style] || FALLBACK_OPENER;
+            var lvl = length.indexOf('8000') >= 0 ? '短篇' : length.indexOf('200000') >= 0 ? '长篇' : length.indexOf('20000') >= 0 ? '中篇' : '';
+            var words = input.trim() ? '根据您提供的内容「' + input.trim().slice(0, 40) + '」' : '根据您的创作设定';
+            if (mode === 'write') {
+              if (activePrompt && activePrompt.name) {
+                var pStyle = GROUP_STYLE[activePrompt.group] || styleEl.value;
+                var pOpener = OPENERS[pStyle] || FALLBACK_OPENER;
+                var extra1 = BODY_EXTRA[Math.floor(Math.random() * BODY_EXTRA.length)];
+                var extra2 = BODY_EXTRA[Math.floor(Math.random() * BODY_EXTRA.length)];
+                return '已根据创作指令《' + activePrompt.name + '》生成：\n\n' + pOpener + '\n\n' + extra1 + '\n\n' + extra2 + '\n\n（以上为演示 Mock 输出。接入真实大模型后，将严格遵循该指令完整产出章节，支持多轮追问与修改。）';
+              }
+              return words + '，结合【' + style + '】风格，为您生成' + (lvl ? lvl : '') + '示例：\n\n' + opener + '\n\n（以上为演示 Mock 输出。接入真实大模型后，将基于您的设定生成完整章节，支持多轮追问与修改。）';
+            }
+            if (mode === 'continue') {
+              var base = input.trim() || '前文尚为空';
+              return '已接续您的思路，保持原有风格与语调：\n\n' + base + '\n\n' + opener.slice(0, 60) + '……\n\n风暴将至，而少年并不知道，命运的齿轮早已悄然转动。';
+            }
+            if (mode === 'polish') {
+              var raw = input.trim() || '示例段落';
+              return '扩写润色完成（篇幅约增长 3 倍，句式与表现力已提升）：\n\n' + raw + '。那一刻，时间仿佛凝滞，连呼吸都变得小心翼翼。原本平淡的细节被层层铺开，情绪的暗流在字里行间涌动，最终汇聚成一句掷地有声的独白——「原来，一切早有注定。」';
+            }
+            return '《' + (input.trim() || '未知作品') + '》拆书分析（演示摘要）：\n\n【类型】' + style + '\n【开篇钩子】' + opener.slice(0, 40) + '…\n【结构】铺垫→冲突→转折→高潮→余韵，五幕递进，节奏张弛有度。\n【人物】主角动机清晰，配角各有立场，冲突来源多元。\n【写作技巧】多用感官描写营造氛围，短句推进节奏，金句收束章节。\n\n（完整拆书报告需接入真实大模型后生成）';
+          }
+
+          sendBtn.addEventListener('click', function () {
+            if (generating) return;
+            var text = inputEl.value.trim();
+            if (!text && mode !== 'write') {
+              addMessage('ai', '请先输入需要处理的内容，或切换到「AI 写作」模式让我自由创作。');
+              return;
+            }
+            generating = true;
+            sendBtn.disabled = true;
+            chatBody.dataset.state = 'loading';
+            addMessage('user', text || '（空）请以【' + styleEl.value + '】风格，生成一个' + lengthEl.value.split('（')[0] + '示例。');
+            var loadingMsg = addMessage('ai', '正在生成中');
+            loadingMsg.classList.add('loading');
+            var reply = mockReply(text);
+            setTimeout(function () {
+              loadingMsg.classList.remove('loading');
+              loadingMsg.querySelector('.message-bubble').textContent = reply;
+              chatBody.dataset.state = 'complete';
+              generating = false;
+              sendBtn.disabled = false;
+            }, 900);
+          });
+
+          inputEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              sendBtn.click();
+            }
+          });
+
+          document.querySelectorAll('[data-quick]').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+              inputEl.value = chip.dataset.quick;
+              inputEl.focus();
+            });
+          });
+
+          var saveBtn = document.getElementById('save-btn');
+          var saveOk = document.getElementById('save-ok');
+          var exportBtn = document.getElementById('export-btn');
+          function collectMessages() {
+            var msgs = [];
+            chatBody.querySelectorAll('.message').forEach(function (m) {
+              var bubble = m.querySelector('.message-bubble');
+              var role = m.classList.contains('user') ? 'user' : 'ai';
+              if (bubble) msgs.push({ role: role, text: bubble.textContent });
+            });
+            return msgs;
+          }
+          if (saveBtn) saveBtn.addEventListener('click', function () {
+            var draft = { mode: mode, style: styleEl.value, length: lengthEl.value, messages: collectMessages() };
+            try { localStorage.setItem('rgyw_write_draft', JSON.stringify(draft)); } catch (e) { /* ignore */ }
+            saveOk.textContent = '已保存 ✓（草稿已存本地）';
+            saveOk.hidden = false;
+            setTimeout(function () { saveOk.hidden = true; saveOk.textContent = '已保存 ✓'; }, 1800);
+          });
+          if (exportBtn) exportBtn.addEventListener('click', function () {
+            var msgs = collectMessages();
+            var lines = [
+              '日光写作 · AI 写作对话记录',
+              '模式：' + MODE_META[mode].title + '　风格：' + styleEl.value + '　篇幅：' + lengthEl.value,
+              '导出时间：' + new Date().toLocaleString(), ''
+            ];
+            if (!msgs.length) lines.push('（暂无对话内容）');
+            msgs.forEach(function (m) {
+              lines.push('【' + (m.role === 'user' ? '我' : '日光写作') + '】');
+              lines.push(m.text);
+              lines.push('');
+            });
+            var blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '日光写作对话记录.txt';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+            saveOk.textContent = '已导出 ✓';
+            saveOk.hidden = false;
+            setTimeout(function () { saveOk.hidden = true; saveOk.textContent = '已保存 ✓'; }, 1800);
+          });
+          // 恢复本地草稿
+          (function restoreDraft() {
+            var raw = null;
+            try { raw = localStorage.getItem('rgyw_write_draft'); } catch (e) { return; }
+            if (!raw) return;
+            var draft = null;
+            try { draft = JSON.parse(raw); } catch (e) { return; }
+            if (!draft || !draft.messages || !draft.messages.length) return;
+            if (draft.style && styleEl) styleEl.value = draft.style;
+            if (draft.length && lengthEl) lengthEl.value = draft.length;
+            if (draft.mode) setMode(draft.mode);
+            if (chatEmpty) { chatEmpty.remove(); chatEmpty = null; }
+            draft.messages.forEach(function (m) {
+              var wrap = document.createElement('div');
+              wrap.className = 'message ' + m.role;
+              var avatar = m.role === 'user' ? '你' : '日';
+              wrap.innerHTML = '<span class="message-avatar" aria-hidden="true">' + avatar + '</span><div class="message-bubble"></div>';
+              wrap.querySelector('.message-bubble').textContent = m.text;
+              chatBody.appendChild(wrap);
+            });
+            chatBody.scrollTop = chatBody.scrollHeight;
+          })();
+          // 人对话：应用从提示词库/创意工具箱带来的创作指令
+          (function applyActivePrompt() {
+            if (!activePrompt || !activePrompt.name) return;
+            if (chatEmpty) { chatEmpty.remove(); chatEmpty = null; }
+            var wrap = document.createElement('div');
+            wrap.className = 'message ai';
+            wrap.innerHTML = '<span class="message-avatar" aria-hidden="true">日</span><div class="message-bubble"></div>';
+            var gName = activePrompt.group ? '（' + activePrompt.group + '）' : '';
+            wrap.querySelector('.message-bubble').textContent = '已加载创作指令《' + activePrompt.name + '》' + gName + '。请描述您的故事想法：题材、主角、核心冲突或想写的片段，我将严格按照该指令为您产出。';
+            chatBody.appendChild(wrap);
+            var pStyle = GROUP_STYLE[activePrompt.group] || styleEl.value;
+            inputEl.placeholder = '描述故事想法，例如：' + pStyle + '背景，主角是……';
+            chatBody.scrollTop = chatBody.scrollHeight;
+          })();
+        })();
+      </script>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">
+            <span class="brand-mark" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39-.39-1.03-.39-1.41 0s-1.03.39-1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z"/></svg>
+            </span>
+            日光写作
+          </div>
+          <p class="footer-desc">数十万创作者选择的 AI 写作工具，专为网络小说、剧本创作者打造。</p>
+        </div>
+        <nav class="footer-nav" aria-label="页脚导航">
+          <div>
+            <h3>产品</h3>
+            <a href="bookshelf.html">书架</a>
+            <a href="write.html">AI写作</a>
+            <a href="write.html">AI续写</a>
+            <a href="write.html">AI扩写润色</a>
+            <a href="write.html">AI拆书</a>
+          </div>
+          <div>
+            <h3>资源</h3>
+            <a href="prompts.html">提示词库</a>
+            <a href="tools.html">创意工具箱</a>
+          <a href="settings.html">设置</a>
+          </div>
+        </nav>
+      </div>
+      <div class="footer-bottom">© 2026 日光写作 · 复刻演示项目 · 页面与功能为演示用 Mock 实现</div>
+    </footer>
+  </body>
+</html>
