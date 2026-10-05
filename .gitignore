@@ -1,0 +1,28 @@
+# 运行数据
+
+data/
+shares/
+.runtime/
+
+# 用户上传素材
+assets/uploads/
+
+# 诊断 / 测试目录
+ai-short-layout-test/
+预览白屏诊断/
+
+# 大文件与参考资料
+*.pdf
+*.epub
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# Python
+__pycache__/
+*.pyc
+serve-daemon.py.bak
+
+# 系统
+.DS_Store
