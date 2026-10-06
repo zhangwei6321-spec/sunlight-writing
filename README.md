@@ -1,5 +1,7 @@
 # 日光写作 · AI 网文创作网站
 
+🌐 **在线体验：<https://zhangwei6321-spec.github.io/sunlight-writing/>**
+
 一个纯前端 + 轻量本地服务的 AI 网文创作工具箱，包含：
 
 - **AI 短篇**（`ai-short.html`）：选创作指令 → 输入故事想法 → 生成短篇/长篇，卡片式展示 + 右侧正文预览
